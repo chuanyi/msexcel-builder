@@ -1,0 +1,21 @@
+{
+  "author": "Charlie Zheng <chuanyi.zheng@gmail.com>",
+  "name": "msexcel-builder",
+  "description": "A tiny library to create Microsoft Office Excel(2007) files under Nodejs.",
+  "tags": [ "xlsx", "excel" ],
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chuanyi/msexcel-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chuanyi/msexcel-builder/issues"
+  },
+  "main": "./lib/msexcel-builder.js",
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+    "xmlbuilder": ">=0.4.2"
+  }
+}
