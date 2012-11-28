@@ -23,7 +23,7 @@ npm install msexcel-builder
 var excelbuilder = require('msexcel-builder');
 ```
 
-Then create a sample workbook with one sheet and some data ...
+Then create a sample workbook with one sheet and some data.
 
 ```javascript
   // Create a new workbook file in current working-path
@@ -44,6 +44,7 @@ Then create a sample workbook with one sheet and some data ...
     else
       console.log('congratulations, your workbook created');
   });
+```
 
 ## API
 
