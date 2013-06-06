@@ -8,14 +8,15 @@ fs  = require 'fs'
 path = require 'path'
 exec = require 'child_process'
 xml = require 'xmlbuilder'
+existsSync = fs.existsSync || path.existsSync
 
 tool = 
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(i-1)
 
   copy : (origin, target) ->
-  	if path.existsSync(origin)
-      fs.mkdirSync(target, 0755) if not path.existsSync(target)
+  	if existsSync(origin)
+      fs.mkdirSync(target, 0755) if not existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -340,7 +341,7 @@ class Workbook
     @id = ''+parseInt(Math.random()*9999999)
     # create temp folder & copy template data
     target = @fpath + '/' + @id + '/'
-    fs.rmdirSync(target) if path.existsSync(target)
+    fs.rmdirSync(target) if existsSync(target)
     tool.copy (opt.tmpl_path + '/tmpl'),target
     # init
     @sheets = []
