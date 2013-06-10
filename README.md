@@ -212,6 +212,9 @@ In node.js
 
 ## Release notes
 
+v0.0.2:
+* Switch compress work to easy-zip to support Heroku deployment.
+
 v0.0.1: Includes
 
 * First release
