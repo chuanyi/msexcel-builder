@@ -5,17 +5,17 @@
 ###
 
 fs  = require 'fs'
-path = require 'path'
 exec = require 'child_process'
 xml = require 'xmlbuilder'
+os = require 'os'
 
 tool = 
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(i-1)
 
   copy : (origin, target) ->
-  	if path.existsSync(origin)
-      fs.mkdirSync(target, 0755) if not path.existsSync(target)
+  	if fs.existsSync(origin)
+      fs.mkdirSync(target, 0o755) if not fs.existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -340,7 +340,7 @@ class Workbook
     @id = ''+parseInt(Math.random()*9999999)
     # create temp folder & copy template data
     target = @fpath + '/' + @id + '/'
-    fs.rmdirSync(target) if path.existsSync(target)
+    fs.rmdirSync(target) if fs.existsSync(target)
     tool.copy (opt.tmpl_path + '/tmpl'),target
     # init
     @sheets = []
@@ -357,28 +357,36 @@ class Workbook
     return sheet
 
   save: (cb) =>
-    target = @fpath + '\\' + @id
+    target = @fpath + '/' + @id
     # 1 - build [Content_Types].xml
-    fs.writeFileSync(target+'\\[Content_Types].xml',@ct.toxml(),'utf8')
+    fs.writeFileSync(target+'/[Content_Types].xml',@ct.toxml(),'utf8')
     # 2 - build docProps/app.xml
-    fs.writeFileSync(target+'\\docProps\\app.xml',@da.toxml(),'utf8')
+    fs.writeFileSync(target+'/docProps/app.xml',@da.toxml(),'utf8')
     # 3 - build xl/workbook.xml
-    fs.writeFileSync(target+'\\xl\\workbook.xml',@wb.toxml(),'utf8')
+    fs.writeFileSync(target+'/xl/workbook.xml',@wb.toxml(),'utf8')
     # 4 - build xl/sharedStrings.xml
-    fs.writeFileSync(target+'\\xl\\sharedStrings.xml',@ss.toxml(),'utf8')
+    fs.writeFileSync(target+'/xl/sharedStrings.xml',@ss.toxml(),'utf8')
     # 5 - build xl/_rels/workbook.xml.rels
-    fs.writeFileSync(target+'\\xl\\_rels\\workbook.xml.rels',@re.toxml(),'utf8')
+    fs.writeFileSync(target+'/xl/_rels/workbook.xml.rels',@re.toxml(),'utf8')
     # 6 - build xl/worksheets/sheet(1-N).xml
     for i in [0...@sheets.length]
-      fs.writeFileSync(target+'\\xl\\worksheets\\sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
+      fs.writeFileSync(target+'/xl/worksheets/sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
     # 7 - build xl/styles.xml
-    fs.writeFileSync(target+'\\xl\\styles.xml',@st.toxml(),'utf8')    
+    fs.writeFileSync(target+'/xl/styles.xml',@st.toxml(),'utf8')    
     # 8 - compress temp folder to target file
-    args = ' a -tzip "' + @fpath + '\\' + @fname + '" "*"'
+    arg1 = ' "' + @fpath + '/' + @fname + '" *'
     opts = {cwd:target}
-    exec.exec '"'+opt.tmpl_path+'\\tool\\7za.exe"' + args, opts, (err,stdout,stderr)->
+    if /^win/.exec(os.platform())
+      exe7z='"'+opt.tmpl_path+'/tool/7za.exe"  a -tzip '
+      rmdirCmd='rmdir "' + target + '" /q /s'
+    else
+      exe7z='zip -r '
+      rmdirCmd='rm -rf "' + target + '"'
+    exec.exec exe7z + arg1, opts, (err,stdout,stderr)->
+      if err
+        console.error('zip Error:'+err+','+stderr+','+target+','+arg1)
       # 9 - delete temp folder
-      exec.exec 'rmdir "' + target + '" /q /s',()->
+      exec.exec rmdirCmd,()->
         cb not err
 
   cancel: () ->
