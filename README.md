@@ -10,6 +10,7 @@ Features:
 * Custom cell border styles(such as thin,medium).
 * Custom cell font styles(such as font-family,bold).
 * Custom cell border styles and merge cells.
+* Text rotation in cells.
 
 ## Getting Started
 
@@ -144,6 +145,7 @@ Example:
 sheet1.align(2, 1, 'center');
 sheet1.valign(3, 3, 'top');
 sheet1.wrap(1, 1, 'true');
+sheet1.rotate(1, 1, 90);
 ```
 
 ## Sheet.font(col, row, font_style)
@@ -172,10 +174,10 @@ The options may contain:
 * `border_style` - (Object) border style options
 The options may contain:
 
-  * `left` - (String) style: 'thin'/'medium'/'thick'
-  * `top` - (String) style: 'thin'/'medium'/'thick'
-  * `right` - (String) style: 'thin'/'medium'/'thick'
-  * `bottom` - (String) style: 'thin'/'medium'/'thick'
+  * `left` - (String) style: 'thin'/'medium'/'thick'/'double'
+  * `top` - (String) style: 'thin'/'medium'/'thick'/'double'
+  * `right` - (String) style: 'thin'/'medium'/'thick'/'double'
+  * `bottom` - (String) style: 'thin'/'medium'/'thick'/'double'
 
 Example:
 

@@ -166,12 +166,15 @@ class Sheet
   valign: (col, row, valign_s)->
     @styles['valgn_'+col+'_'+row] = valign_s
 
+  rotate: (col, row, textRotation)->
+    @styles['rotate_'+col+'_'+row] = textRotation
+
   wrap: (col, row, wrap_s)->
     @styles['wrap_'+col+'_'+row] = wrap_s
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
-    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],wrap:@styles['wrap'+inx]}
+    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
     id = @book.st.style2id(style)
     return id
 
@@ -226,8 +229,9 @@ class Style
     @def_bder_id = @bder2id(null)
     @def_align = '-'
     @def_valign = '-'
+    @def_rotate = '-'
     @def_wrap = '-'
-    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign})
+    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
 
   font2id: (font)->
     font or= {}
@@ -279,11 +283,12 @@ class Style
   style2id:(style)->
     style.align or= @def_align
     style.valign or= @def_valign
+    style.rotate or= @def_rotate
     style.wrap or= @def_wrap
     style.font_id or= @def_font_id
     style.fill_id or= @def_fill_id
     style.bder_id or= @def_bder_id
-    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap
+    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate
     id = @cache[k]
     if id
       return id
@@ -329,7 +334,7 @@ class Style
       e.att('applyBorder','1') if o.bder_id isnt 1
       if o.align isnt '-' or o.valign isnt '-' or o.wrap isnt '-'
         e.att('applyAlignment','1')
-        ea = e.ele('alignment',{horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
+        ea = e.ele('alignment',{textRotation:(if o.rotate is '-' then '0' else o.rotate),horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
         ea.att('wrapText','1') if o.wrap isnt '-'
     ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'常规',xfId:'0',builtinId:'0'})
     ss.ele('dxfs',{count:'0'})
