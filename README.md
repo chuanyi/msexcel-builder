@@ -132,12 +132,14 @@ sheet1.height(1, 20);
 ## Sheet.align(col, row, align)
 ## Sheet.valign(col, row, valign)
 ## Sheet.wrap(col, row, wrap)
+## Sheet.rotate(col, row, angle)
 
 Set cell text align style and wrap style
 
 * `align` - (String) align style: 'center'/'left'/'right'
 * `valign` - (String) vertical align style: 'center'/'top'/'bottom'
 * `wrap` - (String) text wrap style:'true' / 'false'
+* `rotate` - (String) Numeric angle for text rotation: '90'/'-90'
 
 Example:
 
