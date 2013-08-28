@@ -5,17 +5,18 @@
 ###
 
 fs  = require 'fs'
+path = require 'path'
 exec = require 'child_process'
 xml = require 'xmlbuilder'
-os = require 'os'
+existsSync = fs.existsSync || path.existsSync
 
 tool = 
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(i-1)
 
   copy : (origin, target) ->
-  	if fs.existsSync(origin)
-      fs.mkdirSync(target, 0o755) if not fs.existsSync(target)
+  	if existsSync(origin)
+      fs.mkdirSync(target, 0755) if not existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -165,12 +166,15 @@ class Sheet
   valign: (col, row, valign_s)->
     @styles['valgn_'+col+'_'+row] = valign_s
 
+  rotate: (col, row, textRotation)->
+    @styles['rotate_'+col+'_'+row] = textRotation
+
   wrap: (col, row, wrap_s)->
     @styles['wrap_'+col+'_'+row] = wrap_s
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
-    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],wrap:@styles['wrap'+inx]}
+    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
     id = @book.st.style2id(style)
     return id
 
@@ -225,8 +229,9 @@ class Style
     @def_bder_id = @bder2id(null)
     @def_align = '-'
     @def_valign = '-'
+    @def_rotate = '-'
     @def_wrap = '-'
-    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign})
+    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
 
   font2id: (font)->
     font or= {}
@@ -278,11 +283,12 @@ class Style
   style2id:(style)->
     style.align or= @def_align
     style.valign or= @def_valign
+    style.rotate or= @def_rotate
     style.wrap or= @def_wrap
     style.font_id or= @def_font_id
     style.fill_id or= @def_fill_id
     style.bder_id or= @def_bder_id
-    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap
+    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate
     id = @cache[k]
     if id
       return id
@@ -328,7 +334,7 @@ class Style
       e.att('applyBorder','1') if o.bder_id isnt 1
       if o.align isnt '-' or o.valign isnt '-' or o.wrap isnt '-'
         e.att('applyAlignment','1')
-        ea = e.ele('alignment',{horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
+        ea = e.ele('alignment',{textRotation:(if o.rotate is '-' then '0' else o.rotate),horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
         ea.att('wrapText','1') if o.wrap isnt '-'
     ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'常规',xfId:'0',builtinId:'0'})
     ss.ele('dxfs',{count:'0'})
@@ -340,7 +346,7 @@ class Workbook
     @id = ''+parseInt(Math.random()*9999999)
     # create temp folder & copy template data
     target = @fpath + '/' + @id + '/'
-    fs.rmdirSync(target) if fs.existsSync(target)
+    fs.rmdirSync(target) if existsSync(target)
     tool.copy (opt.tmpl_path + '/tmpl'),target
     # init
     @sheets = []
@@ -357,36 +363,28 @@ class Workbook
     return sheet
 
   save: (cb) =>
-    target = @fpath + '/' + @id
+    target = @fpath + '\\' + @id
     # 1 - build [Content_Types].xml
-    fs.writeFileSync(target+'/[Content_Types].xml',@ct.toxml(),'utf8')
+    fs.writeFileSync(target+'\\[Content_Types].xml',@ct.toxml(),'utf8')
     # 2 - build docProps/app.xml
-    fs.writeFileSync(target+'/docProps/app.xml',@da.toxml(),'utf8')
+    fs.writeFileSync(target+'\\docProps\\app.xml',@da.toxml(),'utf8')
     # 3 - build xl/workbook.xml
-    fs.writeFileSync(target+'/xl/workbook.xml',@wb.toxml(),'utf8')
+    fs.writeFileSync(target+'\\xl\\workbook.xml',@wb.toxml(),'utf8')
     # 4 - build xl/sharedStrings.xml
-    fs.writeFileSync(target+'/xl/sharedStrings.xml',@ss.toxml(),'utf8')
+    fs.writeFileSync(target+'\\xl\\sharedStrings.xml',@ss.toxml(),'utf8')
     # 5 - build xl/_rels/workbook.xml.rels
-    fs.writeFileSync(target+'/xl/_rels/workbook.xml.rels',@re.toxml(),'utf8')
+    fs.writeFileSync(target+'\\xl\\_rels\\workbook.xml.rels',@re.toxml(),'utf8')
     # 6 - build xl/worksheets/sheet(1-N).xml
     for i in [0...@sheets.length]
-      fs.writeFileSync(target+'/xl/worksheets/sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
+      fs.writeFileSync(target+'\\xl\\worksheets\\sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
     # 7 - build xl/styles.xml
-    fs.writeFileSync(target+'/xl/styles.xml',@st.toxml(),'utf8')    
+    fs.writeFileSync(target+'\\xl\\styles.xml',@st.toxml(),'utf8')    
     # 8 - compress temp folder to target file
-    arg1 = ' "' + @fpath + '/' + @fname + '" *'
+    args = ' a -tzip "' + @fpath + '\\' + @fname + '" "*"'
     opts = {cwd:target}
-    if /^win/.exec(os.platform())
-      exe7z='"'+opt.tmpl_path+'/tool/7za.exe"  a -tzip '
-      rmdirCmd='rmdir "' + target + '" /q /s'
-    else
-      exe7z='zip -r '
-      rmdirCmd='rm -rf "' + target + '"'
-    exec.exec exe7z + arg1, opts, (err,stdout,stderr)->
-      if err
-        console.error('zip Error:'+err+','+stderr+','+target+','+arg1)
+    exec.exec '"'+opt.tmpl_path+'\\tool\\7za.exe"' + args, opts, (err,stdout,stderr)->
       # 9 - delete temp folder
-      exec.exec rmdirCmd,()->
+      exec.exec 'rmdir "' + target + '" /q /s',()->
         cb not err
 
   cancel: () ->
