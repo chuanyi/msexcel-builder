@@ -39,8 +39,8 @@ Then create a sample workbook with one sheet and some data.
     sheet1.set(i, 1, 'test'+i);
   
   // Save it
-  workbook.save(function(ok){
-    if (!ok) 
+  workbook.save(function(err){
+    if (err) 
       workbook.cancel();
     else
       console.log('congratulations, your workbook created');
@@ -91,8 +91,8 @@ Save current workbook.
 Example:
 
 ```javascript
-workbook.save(function(ok){
-  console.log('workbook saved ' + (ok?'ok':'failed'));
+workbook.save(function(err){
+  console.log('workbook saved ' + (err?'failed':'ok'));
 });
 ```
 
