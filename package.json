@@ -22,6 +22,21 @@
     "xmlbuilder": ">=0.4.2",
     "async": "~0.2.6",
     "fs-extra": "~0.5.0",
-    "easy-zip": "~0.0.4"
+    "easy-zip": "~0.0.4",
+
+    "coffee-script": "*",
+    "moment": "~2.5.0"
+  },
+  "scripts": {
+    "test": "node test/generate_excel.js"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-less": "~0.8.2",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-mincss": "~0.3.2",
+    "grunt-contrib-cssmin": "~0.7.0",
+    "grunt-contrib-uglify": "~0.2.7"
   }
 }

@@ -10,13 +10,13 @@ exec = require 'child_process'
 xml = require 'xmlbuilder'
 existsSync = fs.existsSync || path.existsSync
 
-tool = 
+tool =
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(i-1)
 
   copy : (origin, target) ->
   	if existsSync(origin)
-      fs.mkdirSync(target, 0755) if not existsSync(target)
+      fs.mkdirSync(target, 755) if not existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -133,14 +133,21 @@ class Sheet
     for i in [1..@rows]
       @data[i] = {}
       for j in [1..@cols]
-        @data[i][j] = {v:0}
+        @data[i][j] = {v:0, dataType: 'string'}
     @merges = []
     @col_wd = []
     @row_ht = {}
     @styles = {}
 
-  set: (col, row, str) ->
-    @data[row][col].v = @book.ss.str2id(''+str) if str? and str isnt ''
+  set: (col, row, value) ->
+    if (typeof value) is "string"
+      console.log "Found string " + value
+      @data[row][col].v = @book.ss.str2id(''+value) if value? and value isnt ''
+      console.log "id=" + @data[row][col].v
+      @data[row][col].dataType = 'string'
+    else
+      @data[row][col].v = value
+      @data[row][col].dataType = 'number'
 
   merge: (from_cell, to_cell) ->
     @merges.push({from:from_cell, to:to_cell})
@@ -185,6 +192,7 @@ class Sheet
     ws.ele('dimension',{ref:'A1'})
     ws.ele('sheetViews').ele('sheetView',{workbookViewId:'0'})
     ws.ele('sheetFormatPr',{defaultRowHeight:'13.5'})
+  
     if @col_wd.length > 0
       cols = ws.ele('cols')
       for cw in @col_wd
@@ -203,8 +211,16 @@ class Sheet
           c = r.ele('c',{r:''+tool.i2a(j)+i})
           c.att('s',''+(sid-1)) if sid isnt 1
           if ix.v isnt 0
-            c.att('t','s')
-            c.ele('v',''+(ix.v-1))
+            # comment out for test generating number
+            console.log @data[i][j]
+            if ix.dataType is "string"
+              
+              c.att('t','s')
+              c.ele('v', '' + (ix.v-1))
+            else if ix.dataType is "number"
+              c.ele('v', '' + ix.v)
+            else
+              c.ele('v', '' + ix.v)
     if @merges.length > 0
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
@@ -363,31 +379,72 @@ class Workbook
     return sheet
 
   save: (cb) =>
-    target = @fpath + '\\' + @id
+    target = path.join(path.resolve(@fpath),@id)
+
     # 1 - build [Content_Types].xml
+    if not fs.existsSync(target)
+      fs.mkdirSync target, (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
+      
     fs.writeFileSync(target+'\\[Content_Types].xml',@ct.toxml(),'utf8')
+    
     # 2 - build docProps/app.xml
+    if not fs.existsSync(path.join(target,'docProps'))
+      fs.mkdirSync path.join(target,'docProps'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\docProps\\app.xml',@da.toxml(),'utf8')
+    
     # 3 - build xl/workbook.xml
+    if not fs.existsSync(path.join(target,'xl'))
+      fs.mkdirSync path.join(target,'xl'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\xl\\workbook.xml',@wb.toxml(),'utf8')
+    
     # 4 - build xl/sharedStrings.xml
     fs.writeFileSync(target+'\\xl\\sharedStrings.xml',@ss.toxml(),'utf8')
+    
     # 5 - build xl/_rels/workbook.xml.rels
+    fs.mkdirSync path.join(target,'xl/_rels'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\xl\\_rels\\workbook.xml.rels',@re.toxml(),'utf8')
+    
     # 6 - build xl/worksheets/sheet(1-N).xml
+    fs.mkdirSync path.join(target,'xl\\worksheets'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     for i in [0...@sheets.length]
       fs.writeFileSync(target+'\\xl\\worksheets\\sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
+      
     # 7 - build xl/styles.xml
     fs.writeFileSync(target+'\\xl\\styles.xml',@st.toxml(),'utf8')    
+    
     # 8 - compress temp folder to target file
-    args = ' a -tzip "' + @fpath + '\\' + @fname + '" "*"'
+    args = ' a -tzip "' + path.join('..',@fname) + '" "*"'
     opts = {cwd:target}
+
     exec.exec '"'+opt.tmpl_path+'\\tool\\7za.exe"' + args, opts, (err,stdout,stderr)->
+      
       # 9 - delete temp folder
       exec.exec 'rmdir "' + target + '" /q /s',()->
-        cb not err
+        console.log(err)
+        cb err
 
   cancel: () ->
+    #target = path.join(path.resolve(@fpath),@id)
     # delete temp folder
     fs.rmdirSync target
 
