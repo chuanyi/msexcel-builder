@@ -10,13 +10,13 @@ exec = require 'child_process'
 xml = require 'xmlbuilder'
 existsSync = fs.existsSync || path.existsSync
 
-tool = 
+tool =
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(i-1)
 
   copy : (origin, target) ->
   	if existsSync(origin)
-      fs.mkdirSync(target, 0755) if not existsSync(target)
+      fs.mkdirSync(target, 755) if not existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -133,14 +133,21 @@ class Sheet
     for i in [1..@rows]
       @data[i] = {}
       for j in [1..@cols]
-        @data[i][j] = {v:0}
+        @data[i][j] = {v:0, dataType: 'string'}
     @merges = []
     @col_wd = []
     @row_ht = {}
     @styles = {}
 
-  set: (col, row, str) ->
-    @data[row][col].v = @book.ss.str2id(''+str) if str? and str isnt ''
+  set: (col, row, value) ->
+    if (typeof value) is "string"
+      console.log "Found string " + value
+      @data[row][col].v = @book.ss.str2id(''+value) if value? and value isnt ''
+      console.log "id=" + @data[row][col].v
+      @data[row][col].dataType = 'string'
+    else
+      @data[row][col].v = value
+      @data[row][col].dataType = 'number'
 
   merge: (from_cell, to_cell) ->
     @merges.push({from:from_cell, to:to_cell})
@@ -154,7 +161,7 @@ class Sheet
   font: (col, row, font_s)->
     @styles['font_'+col+'_'+row] = @book.st.font2id(font_s)
 
-  fill: (col, row, fill_s)-> 
+  fill: (col, row, fill_s)->
     @styles['fill_'+col+'_'+row] = @book.st.fill2id(fill_s)
 
   border: (col, row, bder_s)->
@@ -174,17 +181,28 @@ class Sheet
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
-    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
+    style = {
+      font_id:@styles['font'+inx],
+      fill_id:@styles['fill'+inx],
+      bder_id:@styles['bder'+inx],
+      align:@styles['algn'+inx],
+      valign:@styles['valgn'+inx],
+      rotate:@styles['rotate'+inx],
+      wrap:@styles['wrap'+inx]
+    }
     id = @book.st.style2id(style)
     return id
 
   toxml: () ->
-    ws = xml.create('worksheet',{version:'1.0',encoding:'UTF-8',standalone:true})
+    ws = xml.create('worksheet',
+                    {version:'1.0',encoding:'UTF-8',standalone:true})
     ws.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
-    ws.att('xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+    ws.att('xmlns:r',
+           'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
     ws.ele('dimension',{ref:'A1'})
     ws.ele('sheetViews').ele('sheetView',{workbookViewId:'0'})
     ws.ele('sheetFormatPr',{defaultRowHeight:'13.5'})
+  
     if @col_wd.length > 0
       cols = ws.ele('cols')
       for cw in @col_wd
@@ -203,12 +221,21 @@ class Sheet
           c = r.ele('c',{r:''+tool.i2a(j)+i})
           c.att('s',''+(sid-1)) if sid isnt 1
           if ix.v isnt 0
-            c.att('t','s')
-            c.ele('v',''+(ix.v-1))
+            # comment out for test generating number
+            console.log @data[i][j]
+            if ix.dataType is "string"
+              
+              c.att('t','s')
+              c.ele('v', '' + (ix.v-1))
+            else if ix.dataType is "number"
+              c.ele('v', '' + ix.v)
+            else
+              c.ele('v', '' + ix.v)
     if @merges.length > 0
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
-        mc.ele('mergeCell',{ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
+        mc.ele('mergeCell',
+               {ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
     ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})
@@ -231,7 +258,13 @@ class Style
     @def_valign = '-'
     @def_rotate = '-'
     @def_wrap = '-'
-    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
+    @def_style_id = @style2id({
+      font_id:@def_font_id,
+      fill_id:@def_fill_id,
+      bder_id:@def_bder_id,
+      align:@def_align,
+      valign:@def_valign,
+      rotate:@def_rotate})
 
   font2id: (font)->
     font or= {}
@@ -239,7 +272,7 @@ class Style
     font.iter or= '-'
     font.sz or= '11'
     font.color or= '-'
-    font.name or= '宋体'
+    font.name or= 'Arial'
     font.scheme or='minor'
     font.family or= '2'
     k = 'font_'+font.bold+font.iter+font.sz+font.color+font.name+font.scheme+font.family
@@ -344,8 +377,9 @@ class Style
 class Workbook
   constructor: (@fpath, @fname) ->
     @id = ''+parseInt(Math.random()*9999999)
+    
     # create temp folder & copy template data
-    target = @fpath + '/' + @id + '/'
+    target = path.join(path.resolve(@fpath),@id)
     fs.rmdirSync(target) if existsSync(target)
     tool.copy (opt.tmpl_path + '/tmpl'),target
     # init
@@ -363,31 +397,72 @@ class Workbook
     return sheet
 
   save: (cb) =>
-    target = @fpath + '\\' + @id
+    target = path.join(path.resolve(@fpath),@id)
+
     # 1 - build [Content_Types].xml
+    if not fs.existsSync(target)
+      fs.mkdirSync target, (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
+      
     fs.writeFileSync(target+'\\[Content_Types].xml',@ct.toxml(),'utf8')
+    
     # 2 - build docProps/app.xml
+    if not fs.existsSync(path.join(target,'docProps'))
+      fs.mkdirSync path.join(target,'docProps'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\docProps\\app.xml',@da.toxml(),'utf8')
+    
     # 3 - build xl/workbook.xml
+    if not fs.existsSync(path.join(target,'xl'))
+      fs.mkdirSync path.join(target,'xl'), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\xl\\workbook.xml',@wb.toxml(),'utf8')
+    
     # 4 - build xl/sharedStrings.xml
     fs.writeFileSync(target+'\\xl\\sharedStrings.xml',@ss.toxml(),'utf8')
+    
     # 5 - build xl/_rels/workbook.xml.rels
+    fs.mkdirSync path.join(target,path.join('xl','_rels')), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     fs.writeFileSync(target+'\\xl\\_rels\\workbook.xml.rels',@re.toxml(),'utf8')
+    
     # 6 - build xl/worksheets/sheet(1-N).xml
+    fs.mkdirSync path.join(target,path.join('xl', 'worksheets')), (e) ->
+        if !e or (e and e.code is 'EEXIST')
+            console.log path + 'created'
+        else
+            console.log(e)
     for i in [0...@sheets.length]
       fs.writeFileSync(target+'\\xl\\worksheets\\sheet'+(i+1)+'.xml',@sheets[i].toxml(),'utf8')
+      
     # 7 - build xl/styles.xml
     fs.writeFileSync(target+'\\xl\\styles.xml',@st.toxml(),'utf8')    
+    
     # 8 - compress temp folder to target file
-    args = ' a -tzip "' + @fpath + '\\' + @fname + '" "*"'
+    args = ' a -tzip "' + path.join(path.resolve(@fpath),@fname) + '" "*"'
     opts = {cwd:target}
+
     exec.exec '"'+opt.tmpl_path+'\\tool\\7za.exe"' + args, opts, (err,stdout,stderr)->
+      
       # 9 - delete temp folder
       exec.exec 'rmdir "' + target + '" /q /s',()->
-        cb not err
+        console.log(err)
+        cb err
 
   cancel: () ->
+    #target = path.join(path.resolve(@fpath),@id)
     # delete temp folder
     fs.rmdirSync target
 
