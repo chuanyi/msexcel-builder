@@ -161,7 +161,7 @@ class Sheet
   font: (col, row, font_s)->
     @styles['font_'+col+'_'+row] = @book.st.font2id(font_s)
 
-  fill: (col, row, fill_s)-> 
+  fill: (col, row, fill_s)->
     @styles['fill_'+col+'_'+row] = @book.st.fill2id(fill_s)
 
   border: (col, row, bder_s)->
@@ -181,14 +181,24 @@ class Sheet
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
-    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
+    style = {
+      font_id:@styles['font'+inx],
+      fill_id:@styles['fill'+inx],
+      bder_id:@styles['bder'+inx],
+      align:@styles['algn'+inx],
+      valign:@styles['valgn'+inx],
+      rotate:@styles['rotate'+inx],
+      wrap:@styles['wrap'+inx]
+    }
     id = @book.st.style2id(style)
     return id
 
   toxml: () ->
-    ws = xml.create('worksheet',{version:'1.0',encoding:'UTF-8',standalone:true})
+    ws = xml.create('worksheet',
+                    {version:'1.0',encoding:'UTF-8',standalone:true})
     ws.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
-    ws.att('xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+    ws.att('xmlns:r',
+           'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
     ws.ele('dimension',{ref:'A1'})
     ws.ele('sheetViews').ele('sheetView',{workbookViewId:'0'})
     ws.ele('sheetFormatPr',{defaultRowHeight:'13.5'})
@@ -224,7 +234,8 @@ class Sheet
     if @merges.length > 0
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
-        mc.ele('mergeCell',{ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
+        mc.ele('mergeCell',
+               {ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
     ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})
@@ -247,7 +258,13 @@ class Style
     @def_valign = '-'
     @def_rotate = '-'
     @def_wrap = '-'
-    @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
+    @def_style_id = @style2id({
+      font_id:@def_font_id,
+      fill_id:@def_fill_id,
+      bder_id:@def_bder_id,
+      align:@def_align,
+      valign:@def_valign,
+      rotate:@def_rotate})
 
   font2id: (font)->
     font or= {}
@@ -255,7 +272,7 @@ class Style
     font.iter or= '-'
     font.sz or= '11'
     font.color or= '-'
-    font.name or= '宋体'
+    font.name or= 'Arial'
     font.scheme or='minor'
     font.family or= '2'
     k = 'font_'+font.bold+font.iter+font.sz+font.color+font.name+font.scheme+font.family
@@ -360,8 +377,9 @@ class Style
 class Workbook
   constructor: (@fpath, @fname) ->
     @id = ''+parseInt(Math.random()*9999999)
+    
     # create temp folder & copy template data
-    target = @fpath + '/' + @id + '/'
+    target = path.join(path.resolve(@fpath),@id)
     fs.rmdirSync(target) if existsSync(target)
     tool.copy (opt.tmpl_path + '/tmpl'),target
     # init
@@ -413,7 +431,7 @@ class Workbook
     fs.writeFileSync(target+'\\xl\\sharedStrings.xml',@ss.toxml(),'utf8')
     
     # 5 - build xl/_rels/workbook.xml.rels
-    fs.mkdirSync path.join(target,'xl/_rels'), (e) ->
+    fs.mkdirSync path.join(target,path.join('xl','_rels')), (e) ->
         if !e or (e and e.code is 'EEXIST')
             console.log path + 'created'
         else
@@ -421,7 +439,7 @@ class Workbook
     fs.writeFileSync(target+'\\xl\\_rels\\workbook.xml.rels',@re.toxml(),'utf8')
     
     # 6 - build xl/worksheets/sheet(1-N).xml
-    fs.mkdirSync path.join(target,'xl\\worksheets'), (e) ->
+    fs.mkdirSync path.join(target,path.join('xl', 'worksheets')), (e) ->
         if !e or (e and e.code is 'EEXIST')
             console.log path + 'created'
         else
@@ -433,7 +451,7 @@ class Workbook
     fs.writeFileSync(target+'\\xl\\styles.xml',@st.toxml(),'utf8')    
     
     # 8 - compress temp folder to target file
-    args = ' a -tzip "' + path.join('..',@fname) + '" "*"'
+    args = ' a -tzip "' + path.join(path.resolve(@fpath),@fname) + '" "*"'
     opts = {cwd:target}
 
     exec.exec '"'+opt.tmpl_path+'\\tool\\7za.exe"' + args, opts, (err,stdout,stderr)->
