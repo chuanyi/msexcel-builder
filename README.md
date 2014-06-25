@@ -197,7 +197,7 @@ Example:
 sheet1.font(2, 1, {name:'黑体',sz:'24',family:'3',scheme:'-',bold:'true',iter:'true'});
 sheet1.fill(3, 3, {type:'solid',fgColor:'8',bgColor:'64'});
 sheet1.border(1, 1, {left:'medium',top:'medium',right:'thin',bottom:'medium'});
-sheet1.numberFormat(2, 3 {format: '_("$"* #,##0.00_);_("$"* \(#,##0.00\);_("$"* "-"??_);_(@_)'});
+sheet1.numberFormat(2, 3, {format: '_("$"* #,##0.00_);_("$"* \(#,##0.00\);_("$"* "-"??_);_(@_)'});
 ```
 
 ## Sheet.merge(from_cell, to_cell)
