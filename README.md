@@ -10,7 +10,9 @@ Features:
 * Custom cell border styles(such as thin,medium).
 * Custom cell font styles(such as font-family,bold).
 * Custom cell border styles and merge cells.
+* Custom cell number formats.
 * Text rotation in cells.
+* Formulas and Numbers
 
 ## Getting Started
 
@@ -106,7 +108,7 @@ Set the cell data.
 
 * `col` - (Number) Cell column index(start with 1).
 * `row` - (Number) Cell row index(start with 1).
-* `str` - (String) Cell data.
+* `str` - (String) Cell data. For numbers(start with *). For formulas(start with =) and use ~ to set default value
 
 No returns.
 
@@ -115,6 +117,8 @@ Example:
 ```javascript
 sheet1.set(1,1,'Hello ');
 sheet1.set(2,1,'world!');
+sheet1.set(3,1,'*27');
+sheet1.set(4,1,'=SUM(A2:C2)~10');
 ```
 
 ## Sheet.width(col, width)
@@ -153,6 +157,7 @@ sheet1.rotate(1, 1, 90);
 ## Sheet.font(col, row, font_style)
 ## Sheet.fill(col, row, fill_style)
 ## Sheet.border(col, row, border_style)
+## Sheet.numberFormat(col, row, numberFormat_style)
 
 Set cell font style, fill style or border style
 
@@ -180,6 +185,11 @@ The options may contain:
   * `top` - (String) style: 'thin'/'medium'/'thick'/'double'
   * `right` - (String) style: 'thin'/'medium'/'thick'/'double'
   * `bottom` - (String) style: 'thin'/'medium'/'thick'/'double'
+  
+* `numberFormat_style` - (Object) border style options
+The options may contain:
+
+  * `format` - (String) excel number format string
 
 Example:
 
@@ -187,6 +197,7 @@ Example:
 sheet1.font(2, 1, {name:'黑体',sz:'24',family:'3',scheme:'-',bold:'true',iter:'true'});
 sheet1.fill(3, 3, {type:'solid',fgColor:'8',bgColor:'64'});
 sheet1.border(1, 1, {left:'medium',top:'medium',right:'thin',bottom:'medium'});
+sheet1.numberFormat(2, 3 {format: '_("$"* #,##0.00_);_("$"* \(#,##0.00\);_("$"* "-"??_);_(@_)'});
 ```
 
 ## Sheet.merge(from_cell, to_cell)
