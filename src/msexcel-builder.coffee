@@ -16,7 +16,7 @@ tool =
 
   copy : (origin, target) ->
   	if existsSync(origin)
-      fs.mkdirSync(target, 0755) if not existsSync(target)
+      fs.mkdirSync(target, 0o0755) if not existsSync(target)
       files = fs.readdirSync(origin)
       if files
         for f in files
@@ -226,6 +226,7 @@ class Style
   with_default:()->
     @def_font_id = @font2id(null)
     @def_fill_id = @fill2id(null)
+    @fill2id({type: 'gray125'})
     @def_bder_id = @bder2id(null)
     @def_align = '-'
     @def_valign = '-'
@@ -256,7 +257,7 @@ class Style
     fill.type or= 'none'
     fill.bgColor or= '-'
     fill.fgColor or= '-'
-    k = 'fill_' + fill.type + fill.bgColor + fill.fgColor
+    k = 'fill_' + fill.type + JSON.stringify(fill.bgColor) + JSON.stringify(fill.fgColor)
     id = @cache[k]
     if id
       return id
@@ -315,8 +316,8 @@ class Style
     for o in @mfills
       e = fills.ele('fill')
       es = e.ele('patternFill',{patternType:o.type})
-      es.ele('fgColor',{theme:'8',tint:'0.79998168889431442'}) if o.fgColor isnt '-'
-      es.ele('bgColor',{indexed:o.bgColor}) if o.bgColor isnt '-'
+      es.ele('fgColor',o.fgColor) if o.fgColor isnt '-'
+      es.ele('bgColor',o.bgColor) if o.bgColor isnt '-'
     bders = ss.ele('borders',{count:@mbders.length})
     for o in @mbders
       e = bders.ele('border')
