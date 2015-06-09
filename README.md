@@ -10,6 +10,7 @@ Features:
 * Custom cell border styles(such as thin,medium).
 * Custom cell font styles(such as font-family,bold).
 * Custom cell border styles and merge cells.
+* Custom cell number formats.
 * Text rotation in cells.
 
 ## Getting Started
@@ -100,21 +101,21 @@ workbook.save(function(err){
 
 Cancel to make current workbook,drop all data.
 
-### Sheet.set(col, row, str)
+### Sheet.set(col, row, val)
 
 Set the cell data.
 
 * `col` - (Number) Cell column index(start with 1).
 * `row` - (Number) Cell row index(start with 1).
-* `str` - (String) Cell data.
+* `val` - (String/Number) Cell data.
 
 No returns.
 
 Example:
 
 ```javascript
-sheet1.set(1,1,'Hello ');
-sheet1.set(2,1,'world!');
+sheet1.set(1, 1, 'Hello world!');
+sheet1.set(2, 1, 123.456);
 ```
 
 ## Sheet.width(col, width)
@@ -127,6 +128,18 @@ Example:
 ```javascript
 sheet1.width(1, 30);
 sheet1.height(1, 20);
+```
+
+## Sheet.format(col, row, format)
+
+Set cell number format
+
+* `format` - (String) format string
+
+Example:
+
+```javascript
+sheet1.format(2, 1, '0.000');
 ```
 
 ## Sheet.align(col, row, align)
