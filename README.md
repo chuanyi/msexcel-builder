@@ -107,9 +107,11 @@ Set the cell data.
 
 * `col` - (Number) Cell column index(start with 1).
 * `row` - (Number) Cell row index(start with 1).
-* `val` - (String/Number) Cell data.
+* `val` - (String/Number/Date) Cell data.
 
 No returns.
+
+Notes: A date is stored as a number, so the appropriate cell format should also be set.
 
 Example:
 
