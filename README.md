@@ -40,11 +40,24 @@ Then create a sample workbook with one sheet and some data.
   
   // Save it
   workbook.save(function(err){
-    if (err) 
-      workbook.cancel();
+    if (err)
+      throw err;
     else
       console.log('congratulations, your workbook created');
   });
+```
+
+or return a JSZip object that can be used to stream the contents (and even save it to disk):
+
+```
+   workbook.generate(function(err, jszip) {
+     if (err)
+       throw err;
+     else {
+       var buffer = jszip.generate({type: "nodebuffer"});
+       require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
+     }
+   });
 ```
 
 ## API
@@ -216,10 +229,18 @@ In node.js
 
 ## Release notes
 
+v0.1.0
+* Generate JSZip object, dropping need to generate temporary files on disk.
+* Removed dependency on `fs-extra` and `exec` and `easy-zip`.
+* Added dependency on `js-zip`.
+* Removed method `save` and replaced it with `generate(callback)` that returns a JSZip object.
+* This now theoretically should be able to run in the browser, though that is not tested.
+* Also refactored base Excel files so they are read from code rather than from disk.
+
 v0.0.2:
 * Switch compress work to easy-zip to support Heroku deployment.
 
 v0.0.1: Includes
 
-* First release
+* First release.
 * Using 7z.exe to do compress work, so only support windows now.
