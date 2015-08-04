@@ -16,6 +16,11 @@ function compareWorkbooks(path1, path2) {
 
 describe('It generates a simple workbook', function() {
 
+  it ('has a vestigial cancel method for backward compatibility', function() {
+    var workbook = excelbuilder.createWorkbook()
+    workbook.cancel()
+  })
+
   it ('generates a ZIP file we can save', function(done) {
 
     var workbook = excelbuilder.createWorkbook()
