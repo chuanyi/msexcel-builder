@@ -5,7 +5,7 @@
 ###
 JSZip = require 'jszip'
 xml = require 'xmlbuilder'
-a = 4;
+
 tool =
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123'.charAt(i-1)
@@ -335,7 +335,6 @@ class Workbook
     @re = new XlRels(@)
     @st = new Style(@)
 
-
   createSheet: (name, cols, rows) ->
     sheet = new Sheet(@,name,cols,rows)
     @sheets.push sheet
@@ -348,8 +347,7 @@ class Workbook
       # dependence on file system isolated to this function
       require('fs').writeFile target, buffer, cb
 
-
-  # takes a callback function(err, zip) and returns a JSZip object on success
+ # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>
 
     zip = new JSZip
@@ -374,7 +372,11 @@ class Workbook
     zip.file('xl/styles.xml',@st.toxml())
     cb null, zip
 
-module.exports = 
+  cancel: () ->
+    # delete temp folder
+    console.error "workbook.cancel() is deprecated"
+
+module.exports =
   createWorkbook: (fpath, fname)->
     return new Workbook(fpath, fname)
 
