@@ -30,8 +30,10 @@ describe('It generates a simple workbook', function() {
 
 // Fill some data
     sheet1.set(1, 1, 'I am title');
-    for (var i = 2; i < 5; i++)
+    for (var i = 2; i < 5; i++) {
       sheet1.set(i, 1, 'test' + i);
+        sheet1.set(i, 2,  i);
+    }
 
 // Save it
     workbook.generate(function (err, zip) {

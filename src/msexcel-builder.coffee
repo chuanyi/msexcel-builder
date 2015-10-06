@@ -121,7 +121,16 @@ class Sheet
     @styles = {}
 
   set: (col, row, str) ->
-    @data[row][col].v = @book.ss.str2id(''+str) if str? and str isnt ''
+    if  typeof str == 'string'
+      if str != null and str != ''
+        @data[row][col].v = @book.ss.str2id('' + str)
+      return @data[row][col].dataType = 'string'
+    else if typeof str == 'number'
+      @data[row][col].v = str
+      return @data[row][col].dataType = 'number'
+    else
+      @data[row][col].v = str
+    return
 
   merge: (from_cell, to_cell) ->
     @merges.push({from:from_cell, to:to_cell})
@@ -184,8 +193,12 @@ class Sheet
           c = r.ele('c',{r:''+tool.i2a(j)+i})
           c.att('s',''+(sid-1)) if sid isnt 1
           if ix.v isnt 0
-            c.att('t','s')
-            c.ele('v',''+(ix.v-1))
+            if ix.dataType == 'string'
+              c.att('t','s')
+              c.ele('v',''+(ix.v-1))
+            else if ix.dataType == 'number'
+              c.ele 'v', ''+ix.v
+
     if @merges.length > 0
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
