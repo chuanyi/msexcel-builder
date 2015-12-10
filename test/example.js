@@ -57,8 +57,10 @@ describe('It generates a simple workbook', function() {
     var sheet1 = workbook.createSheet('sheet1', 10, 12);
 
     sheet1.set(1, 1, 'I am title');
-    for (var i = 2; i < 5; i++)
+    for (var i = 2; i < 6; i++) {
       sheet1.set(i, 1, 'test' + i);
+      sheet1.set(i, 2, i/2);
+    }
 
     workbook.save(function (err) {
       if (err) throw err;
@@ -69,5 +71,6 @@ describe('It generates a simple workbook', function() {
       }
     });
   })
+
 });
 
