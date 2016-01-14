@@ -1,12 +1,15 @@
 {
-  "author": "Charlie Zheng <chuanyi.zheng@gmail.com>",
+  "author": {
+    "name": "Charlie Zheng",
+    "email": "chuanyi.zheng@gmail.com"
+  },
   "name": "msexcel-builder-colorfix",
-  "description": "A tiny library to create Microsoft Office Excel(2007) files under Nodejs. Color filling fixed by Maxim Romanov",
+  "description": "A tiny library to create Microsoft Office Excel(2007) files under Nodejs. Color filling and archive creating fixed by Maxim Romanov",
   "tags": [
     "xlsx",
     "excel"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "git://github.com/aloteot/msexcel-builder.git"
@@ -22,6 +25,15 @@
     "xmlbuilder": ">=0.4.2",
     "async": "~0.2.6",
     "fs-extra": "~0.5.0",
-    "easy-zip": "~0.0.4"
-  }
+    "easy-zip": "~0.0.4",
+	"archiver": "0.21.0"
+  },
+  "readme": "# msexcel-builder\r\n\r\nA simple and fast library to create MS Office Excel(>2007) xlsx files(Compatible with the OpenOffice document format). \r\n\r\nFeatures:\r\n\r\n* Support workbook and multi-worksheets.\r\n* Custom column width and row height, cell range merge.\r\n* Custom cell fill styles(such as background color).\r\n* Custom cell border styles(such as thin,medium).\r\n* Custom cell font styles(such as font-family,bold).\r\n* Custom cell border styles and merge cells.\r\n* Text rotation in cells.\r\n\r\n## Getting Started\r\n\r\nInstall it in node.js:\r\n\r\n```\r\nnpm install msexcel-builder-colorfix\r\n```\r\n\r\n```javascript\r\nvar excelbuilder = require('msexcel-builder-colorfix');\r\n```\r\n\r\nThen create a sample workbook with one sheet and some data.\r\n\r\n```javascript\r\n  // Create a new workbook file in current working-path\r\n  var workbook = excelbuilder.createWorkbook('./', 'sample.xlsx')\r\n  \r\n  // Create a new worksheet with 10 columns and 12 rows\r\n  var sheet1 = workbook.createSheet('sheet1', 10, 12);\r\n  \r\n  // Fill some data\r\n  sheet1.set(1, 1, 'I am title');\r\n  for (var i = 2; i < 5; i++)\r\n    sheet1.set(i, 1, 'test'+i);\r\n  \r\n  // Save it\r\n  workbook.save(function(err){\r\n    if (err) \r\n      workbook.cancel();\r\n    else\r\n      console.log('congratulations, your workbook created');\r\n  });\r\n```\r\n\r\n## API\r\n\r\n### createWorkbook(save_path, file_name)\r\n\r\nCreate a new workbook file.\r\n\r\n* `save_path` - (String) The path to save workbook.\r\n* `file_name` - (String) The file name of workbook.\r\n\r\nReturns a `Workbook` Object.\r\n\r\nExample: create a xlsx file saved to `C:\\test.xlsx`\r\n\r\n```javascript\r\nvar workbook = excelbuilder.createWorkbook('C:\\','test.xlsx');\r\n```\r\n\r\n### Workbook.createSheet(sheet_name,column_count,row_count)\r\n\r\nCreate a new worksheet with specified columns and rows\r\n\r\n* `sheet_name` - (String) worksheet name.\r\n* `column_count` - (Number) sheet column count.\r\n* `row_count` - (Number) sheet row count.\r\n\r\nReturns a `Sheet` object\r\n\r\nNotes: The sheet name must be unique within a same workbook.\r\n\r\nExample: Create a new sheet named 'sheet1' with 5 columns and 8 rows\r\n\r\n```javascript\r\nvar sheet1 = workbook.createSheet('sheet1', 5, 8);\r\n```\r\n\r\n### Workbook.save(callback)\r\n\r\nSave current workbook.\r\n\r\n* `callback` - (Function) Callback function to handle save result.\r\n\r\nExample:\r\n\r\n```javascript\r\nworkbook.save(function(err){\r\n  console.log('workbook saved ' + (err?'failed':'ok'));\r\n});\r\n```\r\n\r\n### Workbook.cancel()\r\n\r\nCancel to make current workbook,drop all data.\r\n\r\n### Sheet.set(col, row, str)\r\n\r\nSet the cell data.\r\n\r\n* `col` - (Number) Cell column index(start with 1).\r\n* `row` - (Number) Cell row index(start with 1).\r\n* `str` - (String) Cell data.\r\n\r\nNo returns.\r\n\r\nExample:\r\n\r\n```javascript\r\nsheet1.set(1,1,'Hello ');\r\nsheet1.set(2,1,'world!');\r\n```\r\n\r\n## Sheet.width(col, width)\r\n## Sheet.height(row, height)\r\n\r\nSet the column width or row height\r\n\r\nExample:\r\n\r\n```javascript\r\nsheet1.width(1, 30);\r\nsheet1.height(1, 20);\r\n```\r\n\r\n## Sheet.align(col, row, align)\r\n## Sheet.valign(col, row, valign)\r\n## Sheet.wrap(col, row, wrap)\r\n## Sheet.rotate(col, row, angle)\r\n\r\nSet cell text align style and wrap style\r\n\r\n* `align` - (String) align style: 'center'/'left'/'right'\r\n* `valign` - (String) vertical align style: 'center'/'top'/'bottom'\r\n* `wrap` - (String) text wrap style:'true' / 'false'\r\n* `rotate` - (String) Numeric angle for text rotation: '90'/'-90'\r\n\r\nExample:\r\n\r\n```javascript\r\nsheet1.align(2, 1, 'center');\r\nsheet1.valign(3, 3, 'top');\r\nsheet1.wrap(1, 1, 'true');\r\nsheet1.rotate(1, 1, 90);\r\n```\r\n\r\n## Sheet.font(col, row, font_style)\r\n## Sheet.fill(col, row, fill_style)\r\n## Sheet.border(col, row, border_style)\r\n\r\nSet cell font style, fill style or border style\r\n\r\n* `font_style` - (Object) font style options \r\nThe options may contain:\r\n\r\n  * `name` - (String) font name\r\n  * `sz` - (String) font size\r\n  * `family` - (String) font family\r\n  * `scheme` - (String) font scheme\r\n  * `bold` - (String) if bold: 'true'/'false'\r\n  * `iter` - (String) if italic: 'true'/'false'\r\n\r\n* `fill_style` - (Object) fill style options\r\nThe options may contain:\r\n\r\n  * `type` - (String) fill type: such as 'solid'\r\n  * `fgColor` - (String) front color\r\n  * `bgColor` - (String) background color\r\n\r\n* `border_style` - (Object) border style options\r\nThe options may contain:\r\n\r\n  * `left` - (String) style: 'thin'/'medium'/'thick'/'double'\r\n  * `top` - (String) style: 'thin'/'medium'/'thick'/'double'\r\n  * `right` - (String) style: 'thin'/'medium'/'thick'/'double'\r\n  * `bottom` - (String) style: 'thin'/'medium'/'thick'/'double'\r\n\r\nExample:\r\n\r\n```javascript\r\nsheet1.font(2, 1, {name:'黑体',sz:'24',family:'3',scheme:'-',bold:'true',iter:'true'});\r\nsheet1.fill(3, 3, {type:'solid',fgColor:'FFFF0000',bgColor:'64'});\r\nsheet1.border(1, 1, {left:'medium',top:'medium',right:'thin',bottom:'medium'});\r\n```\r\n\r\n## Sheet.merge(from_cell, to_cell)\r\n\r\nMerge some cell ranges\r\n\r\n* `from_cell` / `to_cell` - (Object) cell position\r\nThe cell object contains:\r\n\r\n  * `col` - (Number) cell column index(start with 1)\r\n  * `row` - (Number) cell row index(start with 1) \r\n\r\nExample: Merge the first row as title from (1,1) to (5,1)\r\n\r\n```javascript\r\nsheet1.merge({col:1,row:1},{col:5,row:1});\r\n```\r\n\r\n## Testing\r\n\r\nIn node.js\r\n\r\n```\r\n> cd test\r\n> node test.js\r\n```\r\n\r\n## Release notes\r\n\r\nv0.0.2:\r\n* Switch compress work to easy-zip to support Heroku deployment.\r\n\r\nv0.0.1: Includes\r\n\r\n* First release\r\n* Using 7z.exe to do compress work, so only support windows now.\r\n",
+  "readmeFilename": "README.md",
+  "gitHead": "8d90417d381ab92359c87942ee15e1bfa65d5381",
+  "homepage": "https://github.com/aloteot/msexcel-builder",
+  "_id": "msexcel-builder-colorfix@0.0.2",
+  "scripts": {},
+  "_shasum": "73d92faa2e8f57e41157433eadd24f91aef7696a",
+  "_from": "msexcel-builder-colorfix@"
 }
