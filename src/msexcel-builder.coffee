@@ -5,12 +5,11 @@
 ###
 JSZip = require 'jszip'
 xml = require 'xmlbuilder'
-
 tool =
   i2a : (i) ->
     return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123'.charAt(i-1)
 
-opt = 
+opt =
   tmpl_path : __dirname
 
 class ContentTypes
@@ -49,9 +48,9 @@ class DocPropsApp
       tmp.ele('vt:lpstr',@book.sheets[i-1].name)
     props.ele('Company')
     props.ele('LinksUpToDate','false')
-    props.ele('SharedDoc','false')  
-    props.ele('HyperlinksChanged','false')  
-    props.ele('AppVersion','12.0000') 
+    props.ele('SharedDoc','false')
+    props.ele('HyperlinksChanged','false')
+    props.ele('AppVersion','12.0000')
     return props.end()
 
 class XlWorkbook
@@ -62,7 +61,7 @@ class XlWorkbook
     wb.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     wb.att('xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
     wb.ele('fileVersion ',{appName:'xl',lastEdited:'4',lowestEdited:'4',rupBuild:'4505'})
-    wb.ele('workbookPr',{filterPrivacy:'1',defaultThemeVersion:'124226'}) 
+    wb.ele('workbookPr',{filterPrivacy:'1',defaultThemeVersion:'124226'})
     wb.ele('bookViews').ele('workbookView ',{xWindow:'0',yWindow:'90',windowWidth:'19200',windowHeight:'11640'})
     tmp = wb.ele('sheets')
     for i in [1..@book.sheets.length]
@@ -72,7 +71,7 @@ class XlWorkbook
 
 class XlRels
   constructor: (@book)->
-  
+
   toxml: ()->
     rs = xml.create('Relationships',{version:'1.0',encoding:'UTF-8',standalone:true})
     rs.att('xmlns','http://schemas.openxmlformats.org/package/2006/relationships')
@@ -144,7 +143,7 @@ class Sheet
   font: (col, row, font_s)->
     @styles['font_'+col+'_'+row] = @book.st.font2id(font_s)
 
-  fill: (col, row, fill_s)-> 
+  fill: (col, row, fill_s)->
     @styles['fill_'+col+'_'+row] = @book.st.fill2id(fill_s)
 
   border: (col, row, bder_s)->
@@ -166,7 +165,7 @@ class Sheet
     inx = '_'+col+'_'+row
     style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
     id = @book.st.style2id(style)
-    return id
+    return  id
 
   toxml: () ->
     ws = xml.create('worksheet',{version:'1.0',encoding:'UTF-8',standalone:true})
@@ -300,19 +299,24 @@ class Style
       e.ele('b') if o.bold isnt '-'
       e.ele('i') if o.iter isnt '-'
       e.ele('sz',{val:o.sz})
-      e.ele('color',{theme:o.color}) if o.color isnt '-'
+      e.ele('color',{rgb:o.color}) if o.color isnt '-'
       e.ele('name',{val:o.name})
       e.ele('family',{val:o.family})
       e.ele('charset',{val:'134'})
       e.ele('scheme',{val:'minor'}) if o.scheme isnt '-'
-    fills = ss.ele('fills',{count:@mfills.length})
+    fills = ss.ele('fills',{count:@mfills.length+2})
+    fills.ele('fill').ele('patternFill', {patternType: 'none'})
+    fills.ele('fill').ele('patternFill', {patternType: 'gray125'})
+    #<fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>
+
     for o in @mfills
       e = fills.ele('fill')
       es = e.ele('patternFill',{patternType:o.type})
-      es.ele('fgColor',{theme:'8',tint:'0.79998168889431442'}) if o.fgColor isnt '-'
+      es.ele('fgColor',{rgb : o.fgColor}) if o.fgColor isnt '-'
       es.ele('bgColor',{indexed:o.bgColor}) if o.bgColor isnt '-'
     bders = ss.ele('borders',{count:@mbders.length})
     for o in @mbders
+
       e = bders.ele('border')
       if o.left isnt '-' then e.ele('left',{style:o.left}).ele('color',{auto:'1'}) else e.ele('left')
       if o.right isnt '-' then e.ele('right',{style:o.right}).ele('color',{auto:'1'}) else e.ele('right')
@@ -322,7 +326,7 @@ class Style
     ss.ele('cellStyleXfs',{count:'1'}).ele('xf',{numFmtId:'0',fontId:'0',fillId:'0',borderId:'0'}).ele('alignment',{vertical:'center'})
     cs = ss.ele('cellXfs',{count:@mstyle.length})
     for o in @mstyle
-      e = cs.ele('xf',{numFmtId:'0',fontId:(o.font_id-1),fillId:(o.fill_id-1),borderId:(o.bder_id-1),xfId:'0'})
+      e = cs.ele('xf',{numFmtId:'0',fontId:(o.font_id-1),fillId:o.fill_id+1,borderId:(o.bder_id-1),xfId:'0'})
       e.att('applyFont','1') if o.font_id isnt 1
       e.att('applyFill','1') if o.fill_id isnt 1
       e.att('applyBorder','1') if o.bder_id isnt 1
@@ -360,7 +364,7 @@ class Workbook
       # dependence on file system isolated to this function
       require('fs').writeFile target, buffer, cb
 
- # takes a callback function(err, zip) and returns a JSZip object on success
+  # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>
 
     zip = new JSZip
@@ -389,9 +393,11 @@ class Workbook
     # delete temp folder
     console.error "workbook.cancel() is deprecated"
 
+
 module.exports =
   createWorkbook: (fpath, fname)->
     return new Workbook(fpath, fname)
+
 
 # Base content formerly stored in /lib/tmpl but placed in code so as to avoid dependence on file system
 baseXl =
