@@ -169,3 +169,6 @@ node_modules
 
 #WebStorm
 .idea
+
+#Experimental area
+lab/
