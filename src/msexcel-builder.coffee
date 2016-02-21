@@ -161,6 +161,9 @@ class Sheet
   wrap: (col, row, wrap_s)->
     @styles['wrap_'+col+'_'+row] = wrap_s
 
+  autoFilter: ( filter_s) ->
+    @autoFilter = filter_s;
+
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
     style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
@@ -188,20 +191,24 @@ class Sheet
       for j in [1..@cols]
         ix = @data[i][j]
         sid = @style_id(j, i)
-        if (ix.v isnt 0) or (sid isnt 1)
+        if (ix.v isnt null and ix.v isnt undefined) or (sid isnt 1)
           c = r.ele('c',{r:''+tool.i2a(j)+i})
           c.att('s',''+(sid-1)) if sid isnt 1
-          if ix.v isnt 0
-            if ix.dataType == 'string'
-              c.att('t','s')
-              c.ele('v',''+(ix.v-1))
-            else if ix.dataType == 'number'
-              c.ele 'v', ''+ix.v
+          if ix.dataType == 'string'
+            c.att('t','s')
+            c.ele('v',''+(ix.v-1))
+          else if ix.dataType == 'number'
+            c.ele 'v', ''+ix.v
 
     if @merges.length > 0
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
         mc.ele('mergeCell',{ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
+        #<autoFilter ref="A1:C3"/>
+    if typeof @autoFilter == 'string'
+      ws.ele('autoFilter', {ref: @autoFilter})
+    else if @autoFilter
+      ws.ele('autoFilter', {ref: 'A1:'+ tool.i2a(@cols)+@rows})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
     ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})

@@ -3,6 +3,8 @@ var assert = require('assert');
 var JSZip = require('jszip');
 
 var excelbuilder = require('..');
+var OUTFILE = '/tmp/autofilter.xlsx';
+var TESTFILE = './test/files/autofilter.xlsx';
 
 function compareWorkbooks(path1, path2) {
   var zip1 = new JSZip(fs.readFileSync(path1));
@@ -14,7 +16,7 @@ function compareWorkbooks(path1, path2) {
   }
 }
 
-describe('It generates a simple workbook', function() {
+describe('It applies autofilter', function() {
 
 
   it ('generates a ZIP file we can save', function(done) {
@@ -23,40 +25,43 @@ describe('It generates a simple workbook', function() {
 
     // Create a new worksheet with 10 columns and 12 rows
     var sheet1 = workbook.createSheet('sheet1', 10, 12);
+    var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
-    sheet1.set(1,1,'Red bold centered  with border');
-    sheet1.set(2,2,Math.PI);
-    sheet1.set(3,3,''+Math.PI);
-    sheet1.font(1,1,{
-      name: 'Verdana',
-      sz: 32,
-      color:"0022FF",
-      bold: true,
-      iter:true
-    })
-    sheet1.align(1,1,'center')
-    sheet1.fill(1,1,{
-      type: 'solid',
-      fgColor: 'FF2200'
-    })
-    sheet1.fill(2,2,{
-      type: 'solid',
-      fgColor: '0022FF'
-    })
-    sheet1.fill(3,3,{
-      type: 'solid',
-      fgColor: '22FF00'
-    })
+    for (var c=0; c<10; c++) {
+      sheet1.set(c+1,1, colNames[c]);
+    }
+
+    for (var c=0; c<10; c++) {
+      for (var r=0; r<11; r++) {
+        sheet1.set(c+1,r+2, ''+r*c);
+      }
+    }
+
     sheet1.autoFilter(true);
-    // Save it
+
+    // Create a new worksheet with 10 columns and 12 rows
+    var sheet2 = workbook.createSheet('sheet2', 10, 12);
+    var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
+
+    for (var c=0; c<10; c++) {
+      sheet2.set(c+1,1, colNames[c]);
+    }
+
+    for (var c=0; c<10; c++) {
+      for (var r=0; r<11; r++) {
+        sheet2.set(c+1,r+2,r*c);
+      }
+    }
+
+    sheet2.autoFilter('A1:E12');
+
     workbook.generate(function (err, zip) {
       if (err) throw err;
       else {
         var buffer = zip.generate({type: "nodebuffer"});
-        var OUTFILE = '/tmp/style.xlsx';
         fs.writeFile(OUTFILE, buffer, function (err) {
-          console.log('Test file written to ' + OUTFILE);
-//          compareWorkbooks('./test/files/example.xlsx', OUTFILE)
+          console.log('open ' + OUTFILE);
+//          compareWorkbooks(TESTFILE, OUTFILE)
           done(err);
         });
       }
