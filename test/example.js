@@ -40,7 +40,7 @@ describe('It generates a simple workbook', function() {
       if (err) throw err;
       else {
         var buffer = zip.generate({type: "nodebuffer"});
-        var OUTFILE = '/tmp/example.xlsx';
+        var OUTFILE = './test/out/example.xlsx';
         fs.writeFile(OUTFILE, buffer, function (err) {
           console.log('Test file written to ' + OUTFILE);
           compareWorkbooks('./test/files/example.xlsx', OUTFILE)
@@ -51,7 +51,7 @@ describe('It generates a simple workbook', function() {
   })
 
   it ('Supports the prior constructor syntax', function(done) {
-    var PATH = '/tmp';
+    var PATH = './test/out';
     var FILENAME = 'example2.xlsx';
     var workbook = excelbuilder.createWorkbook(PATH, FILENAME);
     var sheet1 = workbook.createSheet('sheet1', 10, 12);
