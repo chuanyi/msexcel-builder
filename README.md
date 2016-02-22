@@ -87,7 +87,9 @@ Create a new worksheet with specified columns and rows
 
 Returns a `Sheet` object
 
-Notes: The sheet name must be unique within a same workbook.
+Notes: The sheet name must be unique within a same workbook.  No error checking or collision-resolution mechanisms are currently applied.
+
+Also the sheet name is cleaned, replacing disallowed characters `[]\/*:?` with a dash `-`
 
 Example: Create a new sheet named 'sheet1' with 5 columns and 8 rows
 
