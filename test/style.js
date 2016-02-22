@@ -3,7 +3,7 @@ var assert = require('assert');
 var JSZip = require('jszip');
 
 var excelbuilder = require('..');
-var OUTFILE = '/tmp/style.xlsx';
+var OUTFILE =  './test/out/style.xlsx';
 var TESTFILE = './test/files/style.xlsx';
 
 

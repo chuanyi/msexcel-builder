@@ -224,12 +224,17 @@ The argument may be a range (e.g. `"$A1:$J12"`) or `true` in which case the enti
 
 ## Testing
 
-In node.js
+There is a nascent Mocha test suite.
+```
+> npm test
+```
 
-```
-> cd test
-> node test.js
-```
+A number of these tests currently writes output files and test for exact matches
+against a reference file located in `test/files/`.
+
+It's possible that a future feature extension might
+break tests for innocent reasons (e.g. by writing additional XML to the workbook)
+in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
 
