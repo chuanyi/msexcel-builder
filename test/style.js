@@ -3,6 +3,9 @@ var assert = require('assert');
 var JSZip = require('jszip');
 
 var excelbuilder = require('..');
+var OUTFILE = '/tmp/style.xlsx';
+var TESTFILE = './test/files/style.xlsx';
+
 
 function compareWorkbooks(path1, path2) {
   var zip1 = new JSZip(fs.readFileSync(path1));
@@ -30,22 +33,22 @@ describe('It generates a simple workbook', function() {
     sheet1.font(1,1,{
       name: 'Verdana',
       sz: 32,
-      color:"0022FF",
+      color:"FF0022FF",
       bold: true,
       iter:true
     })
     sheet1.align(1,1,'center')
     sheet1.fill(1,1,{
       type: 'solid',
-      fgColor: 'FF2200'
+      fgColor: 'FFFF2200'
     })
     sheet1.fill(2,2,{
       type: 'solid',
-      fgColor: '0022FF'
+      fgColor: 'FF0022FF'
     })
     sheet1.fill(3,3,{
       type: 'solid',
-      fgColor: '22FF00'
+      fgColor: 'FF22FF00'
     })
     sheet1.autoFilter(true);
     // Save it
@@ -53,10 +56,9 @@ describe('It generates a simple workbook', function() {
       if (err) throw err;
       else {
         var buffer = zip.generate({type: "nodebuffer"});
-        var OUTFILE = '/tmp/style.xlsx';
         fs.writeFile(OUTFILE, buffer, function (err) {
           console.log('Test file written to ' + OUTFILE);
-//          compareWorkbooks('./test/files/example.xlsx', OUTFILE)
+          compareWorkbooks(TESTFILE, OUTFILE)
           done(err);
         });
       }

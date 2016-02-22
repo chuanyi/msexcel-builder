@@ -66,6 +66,12 @@ class XlWorkbook
     tmp = wb.ele('sheets')
     for i in [1..@book.sheets.length]
       tmp.ele('sheet',{name:@book.sheets[i-1].name,sheetId:''+i,'r:id':'rId'+i})
+
+
+    definedNames = wb.ele('definedNames') # one entry per autofilter
+    @book.sheets.forEach((sheet, idx) ->
+      definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).txt(sheet.name + '!' + sheet.getRange())
+    )
     wb.ele('calcPr',{calcId:'124519'})
     return wb.end()
 
@@ -162,13 +168,16 @@ class Sheet
     @styles['wrap_'+col+'_'+row] = wrap_s
 
   autoFilter: ( filter_s) ->
-    @autoFilter = filter_s;
+    @autoFilter = if typeof filter_s == 'string' then filter_s else @getRange()
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
     style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
     id = @book.st.style2id(style)
     return  id
+
+  getRange: () ->
+    return '$A$1:$'+ tool.i2a(@cols)+'$'+@rows
 
   toxml: () ->
     ws = xml.create('worksheet',{version:'1.0',encoding:'UTF-8',standalone:true})
@@ -204,11 +213,8 @@ class Sheet
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
         mc.ele('mergeCell',{ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
-        #<autoFilter ref="A1:C3"/>
     if typeof @autoFilter == 'string'
       ws.ele('autoFilter', {ref: @autoFilter})
-    else if @autoFilter
-      ws.ele('autoFilter', {ref: 'A1:'+ tool.i2a(@cols)+@rows})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
     ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})

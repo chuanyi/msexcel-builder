@@ -61,7 +61,7 @@ describe('It applies autofilter', function() {
         var buffer = zip.generate({type: "nodebuffer"});
         fs.writeFile(OUTFILE, buffer, function (err) {
           console.log('open ' + OUTFILE);
-//          compareWorkbooks(TESTFILE, OUTFILE)
+          compareWorkbooks(TESTFILE, OUTFILE)
           done(err);
         });
       }
