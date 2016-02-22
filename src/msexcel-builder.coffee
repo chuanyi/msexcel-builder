@@ -70,7 +70,7 @@ class XlWorkbook
 
     definedNames = wb.ele('definedNames') # one entry per autofilter
     @book.sheets.forEach((sheet, idx) ->
-      definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).txt(sheet.name + '!' + sheet.getRange())
+      definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).raw("'"+sheet.name + "'!"  + sheet.getRange())
     )
     wb.ele('calcPr',{calcId:'124519'})
     return wb.end()
@@ -115,6 +115,9 @@ class SharedStrings
 
 class Sheet
   constructor: (@book, @name, @cols, @rows) ->
+    @name = @name.replace(/[/*:?\[\]]/g,'-');
+
+
     @data = {}
     for i in [1..@rows]
       @data[i] = {}
