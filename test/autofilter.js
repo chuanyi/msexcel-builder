@@ -24,7 +24,7 @@ describe('It applies autofilter', function() {
     var workbook = excelbuilder.createWorkbook()
 
     // Create a new worksheet with 10 columns and 12 rows
-    var sheet1 = workbook.createSheet('sheet1', 10, 12);
+    var sheet1 = workbook.createSheet('NEURO RAD', 10, 12);
     var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
     for (var c=0; c<10; c++) {
@@ -40,7 +40,7 @@ describe('It applies autofilter', function() {
     sheet1.autoFilter(true);
 
     // Create a new worksheet with 10 columns and 12 rows
-    var sheet2 = workbook.createSheet('sheet2', 10, 12);
+    var sheet2 = workbook.createSheet('NEURO ONC', 10, 12);
     var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
     for (var c=0; c<10; c++) {

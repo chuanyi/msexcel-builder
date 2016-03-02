@@ -70,7 +70,8 @@ class XlWorkbook
 
     definedNames = wb.ele('definedNames') # one entry per autofilter
     @book.sheets.forEach((sheet, idx) ->
-      definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).raw("'"+sheet.name + "'!"  + sheet.getRange())
+      if (sheet.autofilter) then
+        definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).raw("'"+sheet.name + "'!"  + sheet.getRange())
     )
     wb.ele('calcPr',{calcId:'124519'})
     return wb.end()
