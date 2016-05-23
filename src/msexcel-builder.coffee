@@ -158,6 +158,10 @@ class Sheet
   border: (col, row, bder_s)->
     @styles['bder_'+col+'_'+row] = @book.st.bder2id(bder_s)
 
+  numberFormat: (col, row, numfmt_s)->
+    console.log "zooks"
+    @styles['numfmt_'+col+'_'+row] = @book.st.numfmt2id(numfmt_s)
+
   align: (col, row, align_s)->
     @styles['algn_'+col+'_'+row] = align_s
 
@@ -175,7 +179,7 @@ class Sheet
 
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
-    style = {font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
+    style = {numfmt_id: @styles['numfmt'+inx],font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
     id = @book.st.style2id(style)
     return  id
 
@@ -224,6 +228,40 @@ class Sheet
     return ws.end()
 
 class Style
+
+  numberFormats: {
+    0: 'General'
+    1: '0'
+    2: '0.00'
+    3: '#,##0'
+    4: '#,##0.00'
+    9: '0%'
+    10: '0.00%'
+    11: '0.00E+00'
+    12: '# ?/?'
+    13: '# ??/??'
+    14: 'm/d/yy'
+    15: 'd-mmm-yy'
+    16: 'd-mmm'
+    17: 'mmm-yy'
+    18: 'h:mm AM/PM'
+    19: 'h:mm:ss AM/PM'
+    20: 'h:mm'
+    21: 'h:mm:ss'
+    22: 'm/d/yy h:mm'
+    37: '#,##0 ;(#,##0)'
+    38: '#,##0 ;[Red](#,##0)'
+    39: '#,##0.00;(#,##0.00)'
+    40: '#,##0.00;[Red](#,##0.00)'
+    45: 'mm:ss'
+    46: '[h]:mm:ss'
+    47: 'mmss.0'
+    48: '##0.0E+0'
+    49: '@'
+    56: '"上午/下午 "hh"時"mm"分"ss"秒 "'
+  }
+
+
   constructor: (@book)->
     @cache = {}
     @mfonts = []  # font style
@@ -289,6 +327,20 @@ class Style
       @cache[k] = @mbders.length
       return @mbders.length
 
+  numfmt2id: (numfmt) ->
+    if typeof numfmt == 'number'
+      return numfmt
+    else if typeof numfmt == 'string'
+      console.log "aseasdfafsd"
+      console.log numfmt
+      console.log @numberFormats
+      for key of @numberFormats.length
+        console.log [key, @numberFormats[key], numfmt, @numberFormats[key] == numfmt]
+        if @numberFormats[key] == numfmt
+          return key;
+
+      throw "Number format "+numfmt + " not found.  Custom number formats not implemented yet"
+
   style2id:(style)->
     style.align or= @def_align
     style.valign or= @def_valign
@@ -342,9 +394,10 @@ class Style
     ss.ele('cellStyleXfs',{count:'1'}).ele('xf',{numFmtId:'0',fontId:'0',fillId:'0',borderId:'0'}).ele('alignment',{vertical:'center'})
     cs = ss.ele('cellXfs',{count:@mstyle.length})
     for o in @mstyle
-      e = cs.ele('xf',{numFmtId:'0',fontId:(o.font_id-1),fillId:o.fill_id+1,borderId:(o.bder_id-1),xfId:'0'})
+      e = cs.ele('xf',{numFmtId: o.numfmt_id||'0',fontId:(o.font_id-1),fillId:o.fill_id+1,borderId:(o.bder_id-1),xfId:'0'})
       e.att('applyFont','1') if o.font_id isnt 1
       e.att('applyFill','1') if o.fill_id isnt 1
+      e.att('applyNumberFormat','1') if o.numfmt_id isnt undefined
       e.att('applyBorder','1') if o.bder_id isnt 1
       if o.align isnt '-' or o.valign isnt '-' or o.wrap isnt '-'
         e.att('applyAlignment','1')

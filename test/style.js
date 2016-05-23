@@ -50,6 +50,7 @@ describe('It generates a simple workbook', function() {
       type: 'solid',
       fgColor: 'FF22FF00'
     })
+    sheet1.numberFormat(2,2,'0.00%') // 10=>'0.00%'
     sheet1.autoFilter(true);
     // Save it
     workbook.generate(function (err, zip) {
