@@ -95,6 +95,7 @@ Example: Create a new sheet named 'sheet1' with 5 columns and 8 rows
 var sheet1 = workbook.createSheet('sheet1', 5, 8);
 ```
 
+### Workbook.saveSync()
 ### Workbook.save(callback)
 
 Save current workbook.
