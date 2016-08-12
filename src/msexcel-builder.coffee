@@ -5,6 +5,7 @@
 ###
 JSZip = require 'jszip'
 xml = require 'xmlbuilder'
+path = require 'path'
 
 tool =
   i2a : (i) ->
@@ -341,7 +342,7 @@ class Workbook
     return sheet
 
   save: (cb) =>
-    target = @fpath + '/' + @fname
+    target = @fpath + path.sep + @fname
     @generate (err, zip) ->
       buffer = zip.generate(type: 'nodebuffer')
       # dependence on file system isolated to this function
