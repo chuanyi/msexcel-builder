@@ -1,6 +1,8 @@
 var fs = require('fs');
 var assert = require('assert');
 var JSZip = require('jszip');
+const os = require('os')
+const path = require('path')
 
 var excelbuilder = require('..');
 
@@ -38,10 +40,10 @@ describe('It generates a simple workbook', function() {
       if (err) throw err;
       else {
         var buffer = zip.generate({type: "nodebuffer"});
-        var OUTFILE = '/tmp/example.xlsx';
+        const OUTFILE = [ os.tmpdir(), 'example.xlsx' ].join(path.sep)
         fs.writeFile(OUTFILE, buffer, function (err) {
           console.log('Test file written to ' + OUTFILE);
-          compareWorkbooks('./test/files/example.xlsx', OUTFILE)
+          compareWorkbooks([ 'test', 'files', 'example.xlsx' ].join(path.sep), OUTFILE)
           done(err);
         });
       }
@@ -49,7 +51,7 @@ describe('It generates a simple workbook', function() {
   })
 
   it ('Supports the prior constructor syntax', function(done) {
-    var PATH = '/tmp';
+    var PATH = os.tmpdir();
     var FILENAME = 'example2.xlsx';
     var workbook = excelbuilder.createWorkbook(PATH, FILENAME);
     var sheet1 = workbook.createSheet('sheet1', 10, 12);
@@ -61,7 +63,7 @@ describe('It generates a simple workbook', function() {
     workbook.save(function (err) {
       if (err) throw err;
       else {
-        var OUTFILE = PATH + "/" + FILENAME;
+        const OUTFILE = [ PATH, FILENAME ].join(path.sep)
         console.log('Test file written to ' + OUTFILE);
         done()
       }
