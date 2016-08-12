@@ -340,14 +340,19 @@ class Workbook
     sheet = new Sheet(@,name,cols,rows)
     @sheets.push sheet
     return sheet
-
+  saveSync: () =>
+    @_save(null, true)
   save: (cb) =>
+    @_save(cb, false)
+  _save: (cb, sync) =>
+    fs = require 'fs'
+    write = if sync then fs.writeFileSync else fs.writeFile 
     target = @fpath + path.sep + @fname
     @generate (err, zip) ->
       buffer = zip.generate(type: 'nodebuffer')
       # dependence on file system isolated to this function
-      require('fs').writeFile target, buffer, cb
-
+      if sync then write target, buffer else write target, buffer, cb
+        
  # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>
 
