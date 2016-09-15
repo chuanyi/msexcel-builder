@@ -1,4 +1,4 @@
-    # msexcel-builder
+# msexcel-builder
 
 A simple and fast library to create MS Office Excel(>2007) xlsx files(Compatible with the OpenOffice document format). 
 
@@ -281,6 +281,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.3.0
+*  Port to JSZip 3.1.2 (from 2.5), a breaking change which makes all JSZip methods asynchronous, 
 
 v0.2.0
 * Write numbers as numbers
