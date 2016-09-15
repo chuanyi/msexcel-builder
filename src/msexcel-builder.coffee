@@ -1,5 +1,5 @@
 ###
-  MS Excel 2007 Creater v0.0.1
+  MS Excel 2007 Creameater v0.0.1
   Author : chuanyi.zheng@gmail.com
   History: 2012/11/07 first created
 ###
@@ -159,7 +159,6 @@ class Sheet
     @styles['bder_'+col+'_'+row] = @book.st.bder2id(bder_s)
 
   numberFormat: (col, row, numfmt_s)->
-    console.log "zooks"
     @styles['numfmt_'+col+'_'+row] = @book.st.numfmt2id(numfmt_s)
 
   align: (col, row, align_s)->
@@ -331,11 +330,7 @@ class Style
     if typeof numfmt == 'number'
       return numfmt
     else if typeof numfmt == 'string'
-      console.log "aseasdfafsd"
-      console.log numfmt
-      console.log @numberFormats
-      for key of @numberFormats.length
-        console.log [key, @numberFormats[key], numfmt, @numberFormats[key] == numfmt]
+      for key of @numberFormats
         if @numberFormats[key] == numfmt
           return key;
 
