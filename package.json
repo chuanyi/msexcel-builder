@@ -6,7 +6,7 @@
     "xlsx",
     "excel"
   ],
-  "version": "0.2.1",
+  "version": "0.3.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/chuanyi/msexcel-builder.git"
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "async": "~0.2.6",
-    "jszip": "^2.5.0",
+    "jszip": "^3.1.2",
     "xmlbuilder": ">=0.4.2"
   }
 }

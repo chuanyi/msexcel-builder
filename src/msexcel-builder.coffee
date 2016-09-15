@@ -421,12 +421,16 @@ class Workbook
     @sheets.push sheet
     return sheet
 
-  save: (cb) =>
+  save: (cb) ->
+    target = undefined
     target = @fpath + '/' + @fname
     @generate (err, zip) ->
-      buffer = zip.generate(type: 'nodebuffer')
-      # dependence on file system isolated to this function
-      require('fs').writeFile target, buffer, cb
+      buffer = undefined
+      buffer = zip.generateAsync({ type: 'nodebuffer' }).then((buffer) ->
+        if err
+          return cb(err)
+        require('fs').writeFile target, buffer, cb
+      )
 
   # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>

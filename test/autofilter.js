@@ -58,7 +58,7 @@ describe('It applies autofilter', function() {
     workbook.generate(function (err, zip) {
       if (err) throw err;
       else {
-        var buffer = zip.generate({type: "nodebuffer"});
+        var buffer = zip.generateAsync({type: "nodebuffer"});
         fs.writeFile(OUTFILE, buffer, function (err) {
           console.log('open ' + OUTFILE);
 //          compareWorkbooks(TEzSTFILE, OUTFILE)
