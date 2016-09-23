@@ -129,9 +129,13 @@ class Sheet
     @styles = {}
 
   set: (col, row, str) ->
-    if typeof str == 'object'
+    if str instanceof Date
+
+        @set col, row, JSDateToExcel str
+        @numberFormat col, row, 17
+    else if typeof str == 'object'
       for key of str
-        @[key] row, col, str[key]
+        @[key] col, row, str[key]
     else if  typeof str == 'string'
       if str != null and str != ''
         @data[row][col].v = @book.ss.str2id('' + str)
@@ -464,6 +468,8 @@ class Workbook
     # delete temp folder
     console.error "workbook.cancel() is deprecated"
 
+JSDateToExcel = (dt) ->
+  dt.valueOf() / 86400000 + 25569
 
 module.exports =
   createWorkbook: (fpath, fname)->
