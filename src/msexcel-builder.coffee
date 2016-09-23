@@ -129,7 +129,10 @@ class Sheet
     @styles = {}
 
   set: (col, row, str) ->
-    if  typeof str == 'string'
+    if typeof str == 'object'
+      for key of str
+        @[key] row, col, str[key]
+    else if  typeof str == 'string'
       if str != null and str != ''
         @data[row][col].v = @book.ss.str2id('' + str)
       return @data[row][col].dataType = 'string'
