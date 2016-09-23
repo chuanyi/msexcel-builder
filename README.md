@@ -132,6 +132,31 @@ sheet1.set(1,1,'Hello ');
 sheet1.set(2,1,'world!');
 ```
 
+### Sheet.set(col, row, obj)
+You can also set objects as shorthand.  If the properties match a method
+then the method will be called with that argument, e.g.
+
+```js
+ sheet1.set(1, 1, {
+      set: 'Red bold centered  with border',
+      font: {
+        name: 'Verdana',
+        sz: 32,
+        color: "FF0022FF",
+        bold: true,
+        iter: true
+      },
+      align: 'center',
+      fill: {
+        type: 'solid',
+        fgColor: 'FFFF2200'
+      }
+    });
+```
+
+
+
+
 ## Sheet.width(col, width)
 ## Sheet.height(row, height)
 
