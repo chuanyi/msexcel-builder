@@ -5,21 +5,13 @@ var JSZip = require('jszip');
 var excelbuilder = require('..');
 var OUTFILE = './test/out/autofilter.xlsx';
 var TESTFILE = './test/files/autofilter.xlsx';
-
-function compareWorkbooks(path1, path2) {
-  var zip1 = new JSZip(fs.readFileSync(path1));
-  var zip2 = new JSZip(fs.readFileSync(path2));
-
-  for (var key in zip1.files) {
-    //console.log(key, zip1.file(key).asText().length, zip2.file(key).asText().length)
-    assert.equal(zip1.file(key).asText(), zip2.file(key).asText())
-  }
-}
-
-describe('It applies autofilter', function() {
+var compareWorkbooks = require('./util/compareworkbooks.js')
 
 
-  it ('generates a ZIP file we can save', function(done) {
+describe('It applies autofilter', function () {
+
+
+  it('generates a ZIP file we can save', function (done) {
 
     var workbook = excelbuilder.createWorkbook()
 
@@ -27,13 +19,13 @@ describe('It applies autofilter', function() {
     var sheet1 = workbook.createSheet('NEURO RAD', 10, 12);
     var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
-    for (var c=0; c<10; c++) {
-      sheet1.set(c+1,1, colNames[c]);
+    for (var c = 0; c < 10; c++) {
+      sheet1.set(c + 1, 1, colNames[c]);
     }
 
-    for (var c=0; c<10; c++) {
-      for (var r=0; r<11; r++) {
-        sheet1.set(c+1,r+2, ''+r*c);
+    for (var c = 0; c < 10; c++) {
+      for (var r = 0; r < 11; r++) {
+        sheet1.set(c + 1, r + 2, '' + r * c);
       }
     }
 
@@ -43,13 +35,13 @@ describe('It applies autofilter', function() {
     var sheet2 = workbook.createSheet('NEURO ONC', 10, 12);
     var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
-    for (var c=0; c<10; c++) {
-      sheet2.set(c+1,1, colNames[c]);
+    for (var c = 0; c < 10; c++) {
+      sheet2.set(c + 1, 1, colNames[c]);
     }
 
-    for (var c=0; c<10; c++) {
-      for (var r=0; r<11; r++) {
-        sheet2.set(c+1,r+2,r*c);
+    for (var c = 0; c < 10; c++) {
+      for (var r = 0; r < 11; r++) {
+        sheet2.set(c + 1, r + 2, r * c);
       }
     }
 
@@ -58,15 +50,19 @@ describe('It applies autofilter', function() {
     workbook.generate(function (err, zip) {
       if (err) throw err;
       else {
-        var buffer = zip.generateAsync({type: "nodebuffer"});
-        fs.writeFile(OUTFILE, buffer, function (err) {
-          console.log('open ' + OUTFILE);
-//          compareWorkbooks(TEzSTFILE, OUTFILE)
-          done(err);
-        });
+        var buffer = zip.generateAsync({type: "nodebuffer"}).then(function (buffer) {
+          fs.writeFile(OUTFILE, buffer, function (err) {
+            console.log('open \"' + OUTFILE + "\"");
+            compareWorkbooks(TESTFILE, OUTFILE, function (err, result) {
+              if (!result) return done(new Error("Results don't match"))
+              assert(result)
+              done();
+            })
+
+          });
+        })
       }
     });
   })
-
 });
-
+//

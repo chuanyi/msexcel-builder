@@ -27,7 +27,7 @@ describe('It generates a simple workbook', function () {
         zip.generateAsync({type: "nodebuffer"}).then(function (buffer) {
           var OUTFILE = './test/out/example.xlsx';
           fs.writeFile(OUTFILE, buffer, function (err) {
-            console.log('Test file written to ' + OUTFILE);
+            console.log('open \"' + OUTFILE + "\"");
             compareWorkbooks('./test/files/example.xlsx', OUTFILE, function (err, result) {
               if (err) throw err;
               assert(result)
@@ -55,8 +55,7 @@ describe('It generates a simple workbook', function () {
       if (err) throw err;
       else {
         var OUTFILE = PATH + "/" + FILENAME;
-        console.log('Test file written to ' + OUTFILE);
-        done()
+        console.log('open \"' + OUTFILE + "\"");        done()
       }
     });
   })

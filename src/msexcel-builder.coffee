@@ -70,7 +70,8 @@ class XlWorkbook
 
     definedNames = wb.ele('definedNames') # one entry per autofilter
     @book.sheets.forEach((sheet, idx) ->
-      if (sheet.autofilter) then definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).raw("'"+sheet.name + "'!"  + sheet.getRange())
+      if (sheet.autofilter)
+        definedNames.ele('definedName', {name: '_xlnm._FilterDatabase', hidden: '1', localSheetId: idx}).raw("'"+sheet.name + "'!"  + sheet.getRange())
     )
     wb.ele('calcPr',{calcId:'124519'})
     return wb.end()
@@ -185,8 +186,8 @@ class Sheet
     @styles['wrap_'+col+'_'+row] = wrap_s
 
   autoFilter: ( filter_s) ->
-    @autoFilter = if typeof filter_s == 'string' then filter_s else @getRange()
-
+    @autofilter = if typeof filter_s == 'string' then filter_s else @getRange()
+    
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
     style = {numfmt_id: @styles['numfmt'+inx],font_id:@styles['font'+inx],fill_id:@styles['fill'+inx],bder_id:@styles['bder'+inx],align:@styles['algn'+inx],valign:@styles['valgn'+inx],rotate:@styles['rotate'+inx],wrap:@styles['wrap'+inx]}
@@ -230,8 +231,8 @@ class Sheet
       mc = ws.ele('mergeCells',{count:@merges.length})
       for m in @merges
         mc.ele('mergeCell',{ref:(''+tool.i2a(m.from.col)+m.from.row+':'+tool.i2a(m.to.col)+m.to.row)})
-    if typeof @autoFilter == 'string'
-      ws.ele('autoFilter', {ref: @autoFilter})
+    if typeof @autofilter == 'string'
+      ws.ele('autoFilter', {ref: @autofilter})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
     ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})

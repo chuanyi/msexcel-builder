@@ -9,7 +9,7 @@ var TESTFILE = './test/files/style.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
 
-describe('It generates a simple workbook', function () {
+describe('It generates a simple workbook with styles applied concisely', function () {
 
 
   it('generates a ZIP file we can save', function (done) {
@@ -65,19 +65,17 @@ describe('It generates a simple workbook', function () {
     } )
 
 
-    sheet1.autoFilter(true);
+    // sheet1.autoFilter(true);
     // Save it
     workbook.generate(function (err, zip) {
       if (err) throw err;
       zip.generateAsync({type: "nodebuffer"}).then(function (buffer) {
         if (err) throw err;
-        console.log("Done...")
         fs.writeFile(OUTFILE, buffer, function (err) {
           if (err) throw err;
           console.log("open \"" + OUTFILE + "\" ")
-          done()
           compareWorkbooks(TESTFILE, OUTFILE, function (err, result) {
-            assert(result)
+            if (!result) return done (new Error("Results don't match"))
             done(err);
           })
         })
