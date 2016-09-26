@@ -127,12 +127,16 @@ class Sheet
     @col_wd = []
     @row_ht = {}
     @styles = {}
+    
 
   set: (col, row, str) ->
     if str instanceof Date
-
-        @set col, row, JSDateToExcel str
-        @numberFormat col, row, 17
+      @set col, row, JSDateToExcel str
+      # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
+      @fill col, row,
+        type: "solid",
+        fgColor: "FFFFFF"
+      @numberFormat col, row, 'd-mmm'
     else if typeof str == 'object'
       for key of str
         @[key] col, row, str[key]

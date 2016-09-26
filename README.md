@@ -132,6 +132,28 @@ sheet1.set(1,1,'Hello ');
 sheet1.set(2,1,'world!');
 ```
 
+Date values are recognized.  If `val` is an instance of `Date` then 
+the data is converted to an Excel value (e.g. `new Date('2016-06-23')` becomes `42544`)
+and a date format is applied in Excel. 
+
+__hack__
+For some reason, the generated workbook only applies Date formats when the fill is also set.
+So when a date value is set, the default format is filled with a white background.
+You can override that with an explicit call to `fill`:
+```javascript
+    sheet1.set(1, 4, new Date('04/01/2009'))
+    
+    sheet1.set(1, 5, {
+      set: new Date('04/01/2009'),
+      fill: { type: "solid", fgColor: "FFAA000"},
+      numberFormat:"m/d/yy"
+    } )
+```
+
+
+
+
+
 ### Sheet.set(col, row, obj)
 You can also set objects as shorthand.  If the properties match a method
 then the method will be called with that argument, e.g.

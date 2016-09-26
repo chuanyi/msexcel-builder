@@ -54,14 +54,15 @@ describe('It generates a simple workbook', function () {
     })
 
     // for some reason date formats only work if the fill is set
-    sheet1.set(1, 4, {
-          set: new Date('07/07/2004'),
-          fill: {
-            type: 'solid',
-            fgColor: 'EEEEEE',
-          },
-          numberFormat: 'd-mmm'
-        })
+    sheet1.set(1, 4, new Date('04/01/2009') )
+    sheet1.set(1, 5, {
+      set: new Date('04/01/2009'),
+      fill: {
+        type: "solid",
+        fgColor: "FFAA000"
+      },
+      numberFormat:"m/d/yy"
+    } )
 
 
     sheet1.autoFilter(true);
@@ -75,10 +76,10 @@ describe('It generates a simple workbook', function () {
           if (err) throw err;
           console.log("open \"" + OUTFILE + "\" ")
           done()
-          // compareWorkbooks(TESTFILE, OUTFILE, function (err, result) {
-          //   assert(result)
-          //   done(err);
-          // })
+          compareWorkbooks(TESTFILE, OUTFILE, function (err, result) {
+            assert(result)
+            done(err);
+          })
         })
       })
     })
