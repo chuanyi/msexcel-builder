@@ -49,13 +49,20 @@ describe('It generates a simple workbook', function () {
       set: '' + Math.PI,
       fill: {
         type: 'solid',
-        fgColor: 'FF22FF00'
+        fgColor: '99BB66'
       }
     })
 
-    sheet1.set(1,4, new Date('Jan 20, 2017'))
-    sheet1.numberFormat(1,4, 'mmm\-yy')
-    
+    // for some reason date formats only work if the fill is set
+    sheet1.set(1, 4, {
+          set: new Date('07/07/2004'),
+          fill: {
+            type: 'solid',
+            fgColor: 'EEEEEE',
+          },
+          numberFormat: 'd-mmm'
+        })
+
 
     sheet1.autoFilter(true);
     // Save it
