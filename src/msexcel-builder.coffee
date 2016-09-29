@@ -5,9 +5,20 @@
 ###
 JSZip = require 'jszip'
 xml = require 'xmlbuilder'
+####tool =
+#  i2a : (i) ->
+#    return 'ABCDEFGHIJKLMNOPQ###RSTUVWXYZ123'.charAt(i-1)
+
 tool =
-  i2a : (i) ->
-    return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123'.charAt(i-1)
+  i2a: (column) ->
+    temp = undefined
+    letter = ''
+    while column > 0
+      temp = (column - 1) % 26
+      letter = String.fromCharCode(temp + 65) + letter
+      column = (column - temp - 1) / 26
+    return letter
+
 
 opt =
   tmpl_path : __dirname
