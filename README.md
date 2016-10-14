@@ -54,8 +54,9 @@ or return a JSZip object that can be used to stream the contents (and even save 
      if (err)
        throw err;
      else {
-       var buffer = jszip.generate({type: "nodebuffer"});
-       require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
+       jszip.generateAsync({type: "nodebuffer"}).then(function(buffer) {
+         require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
+       });
      }
    });
 ```
