@@ -24,6 +24,6 @@
   "dependencies": {
     "async": "~0.2.6",
     "jszip": "^2.5.0",
-    "xmlbuilder": ">=0.4.2"
+    "xmlbuilder": ">=8"
   }
 }
