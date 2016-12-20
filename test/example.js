@@ -1,6 +1,7 @@
 var fs = require('fs');
 var assert = require('assert');
 var JSZip = require('jszip');
+var path = require('path')
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
 var excelbuilder = require('..');
@@ -56,6 +57,29 @@ describe('It generates a simple workbook', function () {
       else {
         var OUTFILE = PATH + "/" + FILENAME;
         console.log('open \"' + OUTFILE + "\"");        done()
+      }
+    });
+  })
+
+  it('takes a file name on save rather than in constructor', function (done) {
+    var PATH = './test/out';
+    var FILENAME = 'example3.xlsx';
+    var workbook = excelbuilder.createWorkbook();
+    var sheet1 = workbook.createSheet('sheet1', 10, 12);
+
+    sheet1.set(1, 1, 'I am title');
+    for (var i = 2; i < 6; i++) {
+      sheet1.set(i, 1, 'test' + i);
+      sheet1.set(i, 2, i / 2);
+    }
+    var OUTFILE = PATH + "/" + FILENAME;
+
+
+    workbook.save(OUTFILE, function (err) {
+      if (err) throw err;
+      else {
+        console.log('open \"' + OUTFILE + "\"");
+        done()
       }
     });
   })

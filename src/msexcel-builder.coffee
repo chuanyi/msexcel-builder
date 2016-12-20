@@ -444,9 +444,11 @@ class Workbook
     @sheets.push sheet
     return sheet
 
-  save: (cb) ->
-    target = undefined
-    target = @fpath + '/' + @fname
+  save: (target, cb) ->
+    if (arguments.length == 1 && typeof target == 'function')
+      cb = target
+      target = @fpath + '/' + @fname
+
     @generate (err, zip) ->
       buffer = undefined
       buffer = zip.generateAsync({ type: 'nodebuffer' }).then((buffer) ->
