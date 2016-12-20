@@ -39,7 +39,7 @@ describe('It generates a simple workbook', function () {
 
     });
   })
-  //
+  
   it('Supports the prior constructor syntax', function (done) {
     var PATH = './test/out';
     var FILENAME = 'example2.xlsx';
