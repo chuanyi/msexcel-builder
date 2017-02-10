@@ -61,6 +61,14 @@ or return a JSZip object that can be used to stream the contents (and even save 
    });
 ```
 
+You can now provide the file path on save rather than in the constructor:
+
+```js
+   workbook.save("/tmp/workbook.xlsx", function(err) {
+      if (err) throw err;
+      console.log("open \"" + path + "\"");
+   });
+```
 ## API
 
 ### createWorkbook(save_path, file_name)
@@ -175,8 +183,26 @@ then the method will be called with that argument, e.g.
         fgColor: 'FFFF2200'
       }
     });
-```
 
+
+    sheet1.set(2, 2, {
+      set: Math.PI,
+      fill: {
+        type: 'solid',
+        fgColor: 'FF0022FF'
+      },
+      numberFormat: '0.00%'
+    }) // 10=>'0.00%'
+
+
+    sheet1.set(3, 3, {
+      set: '' + Math.PI,
+      fill: {
+        type: 'solid',
+        fgColor: '99BB66'
+      }
+    })
+```    
 
 
 
@@ -329,6 +355,11 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.3.3
+* Allow more than 26 columns
+* Handle Javascript Date objects as cell values, converting to Excel dates
+* Added concise form of `.set({})` which now also accepts an object
 
 v0.3.0
 *  Port to JSZip 3.1.2 (from 2.5), a breaking change which makes all JSZip methods asynchronous, 
