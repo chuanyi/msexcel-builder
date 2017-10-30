@@ -3,8 +3,20 @@
   Author : chuanyi.zheng@gmail.com
   History: 2012/11/07 first created
 ###
-JSZip = require 'jszip'
-xml = require 'xmlbuilder'
+if (window? && window.JSZip?)
+  JSZip = window.JSZip
+else if (typeof require != 'undefined' )
+  JSZip = require 'jszip'
+else
+  throw ("JSZip not defined")
+
+if (window? && window.xmlbuilder?)
+  xml = window.xmlbuilder
+else if (typeof require != 'undefined')
+  xml = require 'xmlbuilder'
+else
+  throw ("xmlbuilder not defined")
+
 ####tool =
 #  i2a : (i) ->
 #    return 'ABCDEFGHIJKLMNOPQ###RSTUVWXYZ123'.charAt(i-1)
@@ -19,9 +31,6 @@ tool =
       column = (column - temp - 1) / 26
     return letter
 
-
-opt =
-  tmpl_path : __dirname
 
 class ContentTypes
   constructor: (@book)->
@@ -460,7 +469,7 @@ class Workbook
   # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>
 
-    zip = new JSZip
+    zip = new JSZip()
 
     for key of baseXl
       zip.file key, baseXl[key]
@@ -489,10 +498,15 @@ class Workbook
 JSDateToExcel = (dt) ->
   dt.valueOf() / 86400000 + 25569
 
-module.exports =
-  createWorkbook: (fpath, fname)->
-    return new Workbook(fpath, fname)
+if (module? && module.exports?)
+  module.exports =
+    createWorkbook: (fpath, fname)->
+      return new Workbook(fpath, fname)
 
+if (window?)
+  window.excelbuilder =
+    createWorkbook: (fpath, fname)->
+      return new Workbook(fpath, fname)
 
 # Base content formerly stored in /lib/tmpl but placed in code so as to avoid dependence on file system
 baseXl =

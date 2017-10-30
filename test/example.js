@@ -51,6 +51,7 @@ describe('It generates a simple workbook', function () {
       sheet1.set(i, 1, 'test' + i);
       sheet1.set(i, 2, i / 2);
     }
+    sheet1.set(2,1, {})
 
     workbook.save(function (err) {
       if (err) throw err;

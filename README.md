@@ -69,6 +69,59 @@ You can now provide the file path on save rather than in the constructor:
       console.log("open \"" + path + "\"");
    });
 ```
+## Use in browser
+
+This depends on `xmlbuilder` and `jszip` which are included in the direct
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="text/javascript" src="./xmlbuilder.js"></script>
+  <script type="text/javascript" src="./jszip.js"></script>
+  <script type="text/javascript" src="../lib/msexcel-builder.js"></script>
+</head>
+<body>
+<script>
+    var workbook = excelbuilder.createWorkbook()
+
+    // Create a new worksheet with 10 columns and 12 rows
+    var sheet1 = workbook.createSheet('sheet1', 10, 12);
+
+    for (var i = 1; i < 10; i++) {
+      for (var j = 1; j < 12; j++) {
+        sheet1.set(i, j, i * j)
+      }
+    }
+
+    workbook.generate(function (err, jszip) {
+      if (err) return callback(err);
+
+      jszip.generateAsync({type: "blob", mimeType: 'application/vnd.ms-excel;'}).then(function (blob) {
+        var filename = 'test.xlsx'
+        if (navigator.msSaveBlob) { // IE 10+
+          navigator.msSaveBlob(blob, filename);
+        } 
+        else {
+          var link = document.createElement("a");
+          if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        }
+      })
+    });
+  }
+</script>
+</body>
+</html>
+```
+
 ## API
 
 ### createWorkbook(save_path, file_name)
