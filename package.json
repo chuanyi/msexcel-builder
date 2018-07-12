@@ -9,10 +9,10 @@
   "version": "0.3.3",
   "repository": {
     "type": "git",
-    "url": "git://github.com/chuanyi/msexcel-builder.git"
+    "url": "git://github.com/protobi/msexcel-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/chuanyi/msexcel-builder/issues"
+    "url": "https://github.com/protobi/msexcel-builder/issues"
   },
   "main": "./lib/msexcel-builder.js",
   "engines": {
