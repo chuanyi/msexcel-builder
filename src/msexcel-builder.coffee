@@ -376,7 +376,7 @@ class Style
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
       @numberFormats[fmtid] = numfmt
-      return fmtid
+      return parseInt fmtid
 
   style2id:(style)->
     style.align or= @def_align
