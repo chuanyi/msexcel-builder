@@ -362,11 +362,21 @@ class Style
     if typeof numfmt == 'number'
       return numfmt
     else if typeof numfmt == 'string'
+      fmtid = 0
       for key of @numberFormats
+        fmtid = Math.max(fmtid, parseInt key)
         if @numberFormats[key] == numfmt
           return key;
-
-      throw "Number format "+numfmt + " not found.  Custom number formats not implemented yet"
+      # if it's not in numberFormats, we parse the string and add it the end of numberFormats
+      if ! numfmt
+        throw "Invalid format specification"
+      numfmt = numfmt
+        .replace(/&/g, '&amp')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+      @numberFormats[fmtid] = numfmt
+      return fmtid
 
   style2id:(style)->
     style.align or= @def_align
