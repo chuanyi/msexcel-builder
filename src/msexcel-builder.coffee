@@ -402,7 +402,7 @@ class Style
     # add all numFmts >= 164 as <numFmt numFmtId="${o.num_fmt_id}" formatCode="numFmt"/>
     customNumFmts = [];
     for key, fmt of @numberFormats
-      if parseInt key  >= 164
+      if parseInt(key) >= 164
         customNumFmts.push({numFmtId:key, formatCode: fmt});
     if customNumFmts.length > 0
       numFmts = ss.ele('numFmts', {
