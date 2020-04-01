@@ -366,7 +366,7 @@ class Style
       for key of @numberFormats
         fmtid = Math.max(fmtid, parseInt key)
         if @numberFormats[key] == numfmt
-          return key;
+          return parseInt key;
       # if it's not in numberFormats, we parse the string and add it the end of numberFormats
       if ! numfmt
         throw "Invalid format specification"
@@ -386,7 +386,8 @@ class Style
     style.font_id or= @def_font_id
     style.fill_id or= @def_fill_id
     style.bder_id or= @def_bder_id
-    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate
+    style.numfmt_id or= undefined
+    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate + '_' + style.numfmt_id
     id = @cache[k]
     if id
       return id
@@ -431,7 +432,13 @@ class Style
     ss.ele('cellStyleXfs',{count:'1'}).ele('xf',{numFmtId:'0',fontId:'0',fillId:'0',borderId:'0'}).ele('alignment',{vertical:'center'})
     cs = ss.ele('cellXfs',{count:@mstyle.length})
     for o in @mstyle
-      e = cs.ele('xf',{numFmtId: o.numfmt_id||'0',fontId:(o.font_id-1),fillId:o.fill_id+1,borderId:(o.bder_id-1),xfId:'0'})
+      e = cs.ele('xf',{
+        numFmtId: o.numfmt_id||'0',
+        fontId:(o.font_id-1),
+        fillId:o.fill_id+1,
+        borderId:(o.bder_id-1),
+        xfId:'0'
+      })
       e.att('applyFont','1') if o.font_id isnt 1
       e.att('applyFill','1') if o.fill_id isnt 1
       e.att('applyNumberFormat','1') if o.numfmt_id isnt undefined
