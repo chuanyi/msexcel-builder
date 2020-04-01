@@ -299,6 +299,7 @@ class Style
     @mfills = []  # fill style
     @mbders = []  # border style
     @mstyle = []  # cell style<ref-font,ref-fill,ref-border,align>
+    @numFmtNextId = 164
     @with_default()
 
   with_default:()->
@@ -309,6 +310,7 @@ class Style
     @def_valign = '-'
     @def_rotate = '-'
     @def_wrap = '-'
+    @def_numfmt_id = 0
     @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
 
   font2id: (font)->
@@ -362,9 +364,7 @@ class Style
     if typeof numfmt == 'number'
       return numfmt
     else if typeof numfmt == 'string'
-      fmtid = 0
       for key of @numberFormats
-        fmtid = Math.max(fmtid, parseInt key)
         if @numberFormats[key] == numfmt
           return parseInt key;
       # if it's not in numberFormats, we parse the string and add it the end of numberFormats
@@ -375,8 +375,8 @@ class Style
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-      @numberFormats[fmtid] = numfmt
-      return parseInt fmtid
+      @numberFormats[++@numFmtNextId] = numfmt
+      return @numFmtNextId
 
   style2id:(style)->
     style.align or= @def_align
@@ -386,8 +386,8 @@ class Style
     style.font_id or= @def_font_id
     style.fill_id or= @def_fill_id
     style.bder_id or= @def_bder_id
-    style.numfmt_id or= undefined
-    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate + '_' + style.numfmt_id
+    style.numfmt_id or= @def_numfmt_id
+    k = 's_' + [style.font_id, style.fill_id, style.bder_id, style.align, style.valign, style.wrap, style.rotate, style.numfmt_id].join('_')
     id = @cache[k]
     if id
       return id
