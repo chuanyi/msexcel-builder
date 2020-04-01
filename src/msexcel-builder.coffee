@@ -399,6 +399,17 @@ class Style
   toxml: ()->
     ss = xml.create('styleSheet',{version:'1.0',encoding:'UTF-8',standalone:true})
     ss.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+    # add all numFmts >= 164 as <numFmt numFmtId="${o.num_fmt_id}" formatCode="numFmt"/>
+    customNumFmts = [];
+    for key, fmt of @numberFormats
+      if parseInt key  >= 164
+        customNumFmts.push({numFmtId:key, formatCode: fmt});
+    if customNumFmts.length > 0
+      numFmts = ss.ele('numFmts', {
+        count: customNumFmts.length
+      });
+      for o in customNumFmts
+        numFmts.ele('numFmt', o)
     fonts = ss.ele('fonts',{count:@mfonts.length})
     for o in @mfonts
       e = fonts.ele('font')
