@@ -61,7 +61,7 @@ class DocPropsApp
     props.ele('DocSecurity','0')
     props.ele('ScaleCrop','false')
     tmp = props.ele('HeadingPairs').ele('vt:vector',{size:2,baseType:'variant'})
-    tmp.ele('vt:variant').ele('vt:lpstr','工作表')
+    tmp.ele('vt:variant').ele('vt:lpstr','Worksheets')
     tmp.ele('vt:variant').ele('vt:i4',''+@book.sheets.length)
     tmp = props.ele('TitlesOfParts').ele('vt:vector',{size:@book.sheets.length,baseType:'lpstr'})
     for i in [1..@book.sheets.length]
@@ -319,7 +319,7 @@ class Style
     font.iter or= '-'
     font.sz or= '11'
     font.color or= '-'
-    font.name or= '宋体'
+    font.name or= 'Calibri'
     font.scheme or='minor'
     font.family or= '2'
     k = 'font_'+font.bold+font.iter+font.sz+font.color+font.name+font.scheme+font.family
@@ -458,7 +458,7 @@ class Style
         e.att('applyAlignment','1')
         ea = e.ele('alignment',{textRotation:(if o.rotate is '-' then '0' else o.rotate),horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
         ea.att('wrapText','1') if o.wrap isnt '-'
-    ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'常规',xfId:'0',builtinId:'0'})
+    ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'Normal',xfId:'0',builtinId:'0'})
     ss.ele('dxfs',{count:'0'})
     ss.ele('tableStyles',{count:'0',defaultTableStyle:'TableStyleMedium9',defaultPivotStyle:'PivotStyleLight16'})
     return ss.end()
