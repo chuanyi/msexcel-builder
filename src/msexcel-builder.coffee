@@ -80,9 +80,9 @@ class XlWorkbook
     wb = xml.create('workbook',{version:'1.0',encoding:'UTF-8',standalone:true})
     wb.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     wb.att('xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
-    wb.ele('fileVersion ',{appName:'xl',lastEdited:'4',lowestEdited:'4',rupBuild:'4505'})
+    wb.ele('fileVersion',{appName:'xl',lastEdited:'4',lowestEdited:'4',rupBuild:'4505'})
     wb.ele('workbookPr',{filterPrivacy:'1',defaultThemeVersion:'124226'})
-    wb.ele('bookViews').ele('workbookView ',{xWindow:'0',yWindow:'90',windowWidth:'19200',windowHeight:'11640'})
+    wb.ele('bookViews').ele('workbookView',{xWindow:'0',yWindow:'90',windowWidth:'19200',windowHeight:'11640'})
     tmp = wb.ele('sheets')
     for i in [1..@book.sheets.length]
       tmp.ele('sheet',{name:@book.sheets[i-1].name,sheetId:''+i,'r:id':'rId'+i})
