@@ -17,6 +17,12 @@ else if (typeof require != 'undefined')
 else
   throw ("xmlbuilder not defined")
 
+if (window? && window.xmlbuilder?)
+  fs = window.xmlbuilder
+else if (typeof require != 'undefined')
+  fs = require 'fs'
+
+
 ####tool =
 #  i2a : (i) ->
 #    return 'ABCDEFGHIJKLMNOPQ###RSTUVWXYZ123'.charAt(i-1)
@@ -207,6 +213,22 @@ class Sheet
 
   autoFilter: ( filter_s) ->
     @autofilter = if typeof filter_s == 'string' then filter_s else @getRange()
+
+  _sheetViews: {
+    workbookViewId: '0'
+  }
+
+
+  _pageSetup: {paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'}
+
+  sheetViews: (obj) ->
+    for key, val of obj
+      @_sheetViews[key] = val
+
+
+  pageSetup : (obj) ->
+    for key, val of obj
+      @_pageSetup[key] = val
     
   style_id: (col, row) ->
     inx = '_'+col+'_'+row
@@ -222,7 +244,10 @@ class Sheet
     ws.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     ws.att('xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships')
     ws.ele('dimension',{ref:'A1'})
-    ws.ele('sheetViews').ele('sheetView',{workbookViewId:'0'})
+    ws.ele('sheetViews').ele('sheetView',@_sheetViews)
+
+
+
     ws.ele('sheetFormatPr',{defaultRowHeight:'13.5'})
     if @col_wd.length > 0
       cols = ws.ele('cols')
@@ -255,7 +280,7 @@ class Sheet
       ws.ele('autoFilter', {ref: @autofilter})
     ws.ele('phoneticPr',{fontId:'1',type:'noConversion'})
     ws.ele('pageMargins',{left:'0.7',right:'0.7',top:'0.75',bottom:'0.75',header:'0.3',footer:'0.3'})
-    ws.ele('pageSetup',{paperSize:'9',orientation:'portrait',horizontalDpi:'200',verticalDpi:'200'})
+    ws.ele('pageSetup',@_pageSetup)
     return ws.end()
 
 class Style
@@ -365,6 +390,8 @@ class Style
       for key of @numberFormats
         if @numberFormats[key] == numfmt
           return key;
+        else
+          @numberFormats
 
       throw "Number format "+numfmt + " not found.  Custom number formats not implemented yet"
 
@@ -463,7 +490,7 @@ class Workbook
       buffer = zip.generateAsync({ type: 'nodebuffer' }).then((buffer) ->
         if err
           return cb(err)
-        require('fs').writeFile target, buffer, cb
+        fs.writeFile target, buffer, cb
       )
 
   # takes a callback function(err, zip) and returns a JSZip object on success

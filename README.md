@@ -24,6 +24,7 @@ npm install msexcel-builder
 var excelbuilder = require('msexcel-builder');
 ```
 
+
 Then create a sample workbook with one sheet and some data.
 
 ```javascript
@@ -392,6 +393,26 @@ sheet1.merge({col:1,row:1},{col:5,row:1});
 ## Sheet.autoFilter(filter_spec)
 The argument may be a range (e.g. `"$A1:$J12"`) or `true` in which case the entire sheet domain is used as the range.
 
+## Sheet.sheetViews(obj)
+
+Optionally toggle grid lines and set zoom scale: 
+
+    sheet1.sheetViews({
+      showGridLines: "0",
+      zoomScaleNormal: 50,
+      zoomScale: 50
+    })
+
+## Sheet.pageSetup
+
+Optionally set paper size, orientation, and resolution:
+
+    sheet1.pageSetup({
+      paperSize: '9', 
+      orientation: 'landscape', 
+      horizontalDpi: '200', 
+      verticalDpi: '200'
+    })
 
 ## Testing
 
