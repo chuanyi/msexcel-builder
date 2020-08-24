@@ -3,6 +3,7 @@
   Author : chuanyi.zheng@gmail.com
   History: 2012/11/07 first created
 ###
+  
 if (window? && window.JSZip?)
   JSZip = window.JSZip
 else if (typeof require != 'undefined' )
@@ -21,7 +22,6 @@ if (window? && window.xmlbuilder?)
   fs = window.xmlbuilder
 else if (typeof require != 'undefined')
   fs = require 'fs'
-
 
 ####tool =
 #  i2a : (i) ->
@@ -67,7 +67,7 @@ class DocPropsApp
     props.ele('DocSecurity','0')
     props.ele('ScaleCrop','false')
     tmp = props.ele('HeadingPairs').ele('vt:vector',{size:2,baseType:'variant'})
-    tmp.ele('vt:variant').ele('vt:lpstr','工作表')
+    tmp.ele('vt:variant').ele('vt:lpstr','Worksheets')
     tmp.ele('vt:variant').ele('vt:i4',''+@book.sheets.length)
     tmp = props.ele('TitlesOfParts').ele('vt:vector',{size:@book.sheets.length,baseType:'lpstr'})
     for i in [1..@book.sheets.length]
@@ -317,13 +317,13 @@ class Style
     56: '"上午/下午 "hh"時"mm"分"ss"秒 "'
   }
 
-
   constructor: (@book)->
     @cache = {}
     @mfonts = []  # font style
     @mfills = []  # fill style
     @mbders = []  # border style
     @mstyle = []  # cell style<ref-font,ref-fill,ref-border,align>
+    @numFmtNextId = 164
     @with_default()
 
   with_default:()->
@@ -334,6 +334,7 @@ class Style
     @def_valign = '-'
     @def_rotate = '-'
     @def_wrap = '-'
+    @def_numfmt_id = 0
     @def_style_id = @style2id({font_id:@def_font_id,fill_id:@def_fill_id,bder_id:@def_bder_id,align:@def_align,valign:@def_valign,rotate:@def_rotate})
 
   font2id: (font)->
@@ -342,7 +343,7 @@ class Style
     font.iter or= '-'
     font.sz or= '11'
     font.color or= '-'
-    font.name or= '宋体'
+    font.name or= 'Calibri'
     font.scheme or='minor'
     font.family or= '2'
     k = 'font_'+font.bold+font.iter+font.sz+font.color+font.name+font.scheme+font.family
@@ -353,7 +354,7 @@ class Style
       @mfonts.push font
       @cache[k] = @mfonts.length
       return @mfonts.length
-
+      
   fill2id: (fill)->
     fill or= {}
     fill.type or= 'none'
@@ -389,11 +390,17 @@ class Style
     else if typeof numfmt == 'string'
       for key of @numberFormats
         if @numberFormats[key] == numfmt
-          return key;
-        else
-          @numberFormats
-
-      throw "Number format "+numfmt + " not found.  Custom number formats not implemented yet"
+          return parseInt key;
+      # if it's not in numberFormats, we parse the string and add it the end of numberFormats
+      if ! numfmt
+        throw "Invalid format specification"
+      numfmt = numfmt
+        .replace(/&/g, '&amp')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+      @numberFormats[++@numFmtNextId] = numfmt
+      return @numFmtNextId
 
   style2id:(style)->
     style.align or= @def_align
@@ -403,7 +410,8 @@ class Style
     style.font_id or= @def_font_id
     style.fill_id or= @def_fill_id
     style.bder_id or= @def_bder_id
-    k = 's_' + style.font_id + '_' + style.fill_id + '_' + style.bder_id + '_' + style.align + '_' + style.valign + '_' + style.wrap + '_' + style.rotate
+    style.numfmt_id or= @def_numfmt_id
+    k = 's_' + [style.font_id, style.fill_id, style.bder_id, style.align, style.valign, style.wrap, style.rotate, style.numfmt_id].join('_')
     id = @cache[k]
     if id
       return id
@@ -415,6 +423,17 @@ class Style
   toxml: ()->
     ss = xml.create('styleSheet',{version:'1.0',encoding:'UTF-8',standalone:true})
     ss.att('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+    # add all numFmts >= 164 as <numFmt numFmtId="${o.num_fmt_id}" formatCode="numFmt"/>
+    customNumFmts = [];
+    for key, fmt of @numberFormats
+      if parseInt(key) >= 164
+        customNumFmts.push({numFmtId:key, formatCode: fmt});
+    if customNumFmts.length > 0
+      numFmts = ss.ele('numFmts', {
+        count: customNumFmts.length
+      });
+      for o in customNumFmts
+        numFmts.ele('numFmt', o)
     fonts = ss.ele('fonts',{count:@mfonts.length})
     for o in @mfonts
       e = fonts.ele('font')
@@ -448,7 +467,13 @@ class Style
     ss.ele('cellStyleXfs',{count:'1'}).ele('xf',{numFmtId:'0',fontId:'0',fillId:'0',borderId:'0'}).ele('alignment',{vertical:'center'})
     cs = ss.ele('cellXfs',{count:@mstyle.length})
     for o in @mstyle
-      e = cs.ele('xf',{numFmtId: o.numfmt_id||'0',fontId:(o.font_id-1),fillId:o.fill_id+1,borderId:(o.bder_id-1),xfId:'0'})
+      e = cs.ele('xf',{
+        numFmtId: o.numfmt_id||'0',
+        fontId:(o.font_id-1),
+        fillId:o.fill_id+1,
+        borderId:(o.bder_id-1),
+        xfId:'0'
+      })
       e.att('applyFont','1') if o.font_id isnt 1
       e.att('applyFill','1') if o.fill_id isnt 1
       e.att('applyNumberFormat','1') if o.numfmt_id isnt undefined
@@ -457,7 +482,7 @@ class Style
         e.att('applyAlignment','1')
         ea = e.ele('alignment',{textRotation:(if o.rotate is '-' then '0' else o.rotate),horizontal:(if o.align is '-' then 'left' else o.align), vertical:(if o.valign is '-' then 'top' else o.valign)})
         ea.att('wrapText','1') if o.wrap isnt '-'
-    ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'常规',xfId:'0',builtinId:'0'})
+    ss.ele('cellStyles',{count:'1'}).ele('cellStyle',{name:'Normal',xfId:'0',builtinId:'0'})
     ss.ele('dxfs',{count:'0'})
     ss.ele('tableStyles',{count:'0',defaultTableStyle:'TableStyleMedium9',defaultPivotStyle:'PivotStyleLight16'})
     return ss.end()

@@ -6,13 +6,13 @@
     "xlsx",
     "excel"
   ],
-  "version": "0.3.4",
+  "version": "0.3.8",
   "repository": {
     "type": "git",
-    "url": "git://github.com/chuanyi/msexcel-builder.git"
+    "url": "git://github.com/protobi/msexcel-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/chuanyi/msexcel-builder/issues"
+    "url": "https://github.com/protobi/msexcel-builder/issues"
   },
   "main": "./lib/msexcel-builder.js",
   "engines": {
@@ -29,5 +29,9 @@
   "devDependencies": {
     "jquery": "^3.5.1",
     "jsdom": "^16.4.0"
+  },
+  "browser": {
+    "fs": false,
+    "path": false
   }
 }
