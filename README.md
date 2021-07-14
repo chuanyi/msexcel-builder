@@ -51,15 +51,15 @@ Then create a sample workbook with one sheet and some data.
 or return a JSZip object that can be used to stream the contents (and even save it to disk):
 
 ```
-   workbook.generate(function(err, jszip) {
-     if (err)
-       throw err;
-     else {
-       jszip.generateAsync({type: "nodebuffer"}).then(function(buffer) {
-         require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
-       });
-     }
-   });
+workbook.generate(function(err, jszip) {
+if (err)
+throw err;
+else {
+jszip.generateAsync({type: "nodebuffer"}).then(function(buffer) {
+require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
+});
+}
+});
 ```
 
 You can now provide the file path on save rather than in the constructor:
@@ -403,7 +403,15 @@ Optionally toggle grid lines and set zoom scale:
       zoomScale: 50
     })
 
-## Sheet.pageSetup
+## Sheet.split(ncols, nrows, state, activePane, topLeftCell)
+
+Optionally freeze first rows and/or columns.  At a minimum specify the number of columns and rows.
+The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is calculated .
+
+    sheet1.split(1, 2)
+    sheet1.split(1, 2, "frozen", "bottomRight", "B2")
+
+## Sheet.pageSetup(obj)
 
 Optionally set paper size, orientation, and resolution:
 
@@ -429,6 +437,12 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.3.9
+* Add `Sheet.split(ncols, nrows)`
+
+v0.3.8
+* Add `Sheet.sheetViews` and `Sheet.pageSetup(obj)` 
 
 v0.3.3
 * Allow more than 26 columns
