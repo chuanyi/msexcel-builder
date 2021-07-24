@@ -195,6 +195,7 @@ class Sheet
     @col_wd = []
     @row_ht = {}
     @styles = {}
+    @formulas=[]
 
 
   set: (col, row, str) ->
@@ -218,6 +219,12 @@ class Sheet
     else
       @data[row][col].v = str
     return
+
+  formula: (col, row, str) ->
+    if (typeof str == 'string')
+      @formulas = @formulas || []
+      @formulas[row] = @formulas[row] || []
+      @formulas[row][col] = str
 
   merge: (from_cell, to_cell) ->
     @merges.push({from: from_cell, to: to_cell})
@@ -312,7 +319,6 @@ class Sheet
     ws.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     ws.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
     ws.ele('dimension', {ref: 'A1'})
-    console.log(@_sheetViews)
 
     ws.ele('sheetViews').ele('sheetView', @_sheetViews).ele('pane', @_sheetViewsPane)
 
@@ -340,6 +346,9 @@ class Sheet
             c.ele('v', '' + (ix.v - 1))
           else if ix.dataType == 'number'
             c.ele 'v', '' + ix.v
+            
+          if (@formulas[i] && @formulas[i][j])
+            c.ele('f',@formulas[i][j])
 
     if @merges.length > 0
       mc = ws.ele('mergeCells', {count: @merges.length})

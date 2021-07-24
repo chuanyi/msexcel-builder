@@ -17,7 +17,9 @@ describe('It generates a simple workbook with styles applied individuallymo', fu
     var workbook = excelbuilder.createWorkbook()
     var sheet1 = workbook.createSheet('sheet1', 10, 12);
 
-    sheet1.set(1, 1, 'Red bold centered  with border');
+    sheet1.set(1, 1, {
+      set: 'Red bold centered  with border'
+    });
     sheet1.set(2, 2, Math.PI);
     sheet1.set(3, 3, '' + Math.PI);
     sheet1.font(1, 1, {

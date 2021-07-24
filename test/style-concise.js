@@ -3,7 +3,7 @@ var assert = require('assert');
 var JSZip = require('jszip');
 
 var excelbuilder = require('..');
-var OUTFILE = './test/out/style.xlsx';
+var OUTFILE = './lab/style/style.xlsx';
 var TESTFILE = './test/files/style.xlsx';
 
 var compareWorkbooks = require('./util/compareworkbooks.js')
@@ -20,6 +20,10 @@ describe('It generates a simple workbook with styles applied concisely', functio
 
     sheet1.set(1, 1, {
       set: 'Red bold centered  with border',
+      border: {
+          top: 'thin',
+          bottom:'thin'
+      },
       font: {
         name: 'Verdana',
         sz: 32,

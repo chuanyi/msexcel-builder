@@ -3,15 +3,15 @@ var assert = require('assert');
 var JSZip = require('jszip');
 
 var excelbuilder = require('..');
-var OUTFILE = './lab/freeze/freeze.xlsx';
-var TESTFILE = './test/files/freeze.xlsx';
+var OUTFILE = './lab/formula/workbook.xlsx';
+var TESTFILE = './test/files/formula.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
 
 describe('It applies autofilter', function () {
 
 
-  it('generates a ZIP file we can save', function (done) {
+  it('generates worksheet with formulas', function (done) {
 
     var workbook = excelbuilder.createWorkbook()
 
@@ -20,22 +20,18 @@ describe('It applies autofilter', function () {
     var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
     for (var c = 0; c < 10; c++) {
-      sheet.set(c + 1, 1, colNames[c]);
+      sheet.set(c + 1, 1, c);
+    }
+
+    for (var r = 0; r < 11; r++) {
+      sheet.set( 1, r + 1, r);
     }
 
     for (var c = 0; c < 10; c++) {
       for (var r = 0; r < 11; r++) {
-        sheet.set(c + 1, r + 2, r * c);
+        sheet.formula(c + 2, r + 2, `=${('ABCDEFGHIJKLMNOPQRST')[c+1]}1 * A${r+2}`);
       }
     }
-
-    sheet.autoFilter('A1:E12');
-    sheet.sheetViews({
-      showGridLines: "0",
-    })
-    sheet.pageSetup({
-      scale: "50"
-    })
     sheet.split(1,1)
 
     workbook.generate(function (err, zip) {

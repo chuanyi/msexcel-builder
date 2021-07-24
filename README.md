@@ -258,10 +258,15 @@ then the method will be called with that argument, e.g.
     })
 ```    
 
+### Sheet.formula(col, row, str) 
+Create a cell formula
+```
+sheet1.formula(3, 3, "=A3*B2")
+```
 
 
-## Sheet.width(col, width)
-## Sheet.height(row, height)
+### Sheet.width(col, width)
+### Sheet.height(row, height)
 
 Set the column width or row height
 
@@ -272,10 +277,10 @@ sheet1.width(1, 30);
 sheet1.height(1, 20);
 ```
 
-## Sheet.align(col, row, align)
-## Sheet.valign(col, row, valign)
-## Sheet.wrap(col, row, wrap)
-## Sheet.rotate(col, row, angle)
+### Sheet.align(col, row, align)
+### Sheet.valign(col, row, valign)
+### Sheet.wrap(col, row, wrap)
+### Sheet.rotate(col, row, angle)
 
 Set cell text align style and wrap style
 
@@ -293,9 +298,9 @@ sheet1.wrap(1, 1, 'true');
 sheet1.rotate(1, 1, 90);
 ```
 
-## Sheet.font(col, row, font_style)
-## Sheet.fill(col, row, fill_style)
-## Sheet.border(col, row, border_style)
+### Sheet.font(col, row, font_style)
+### Sheet.fill(col, row, fill_style)
+### Sheet.border(col, row, border_style)
 
 Set cell font style, fill style or border style
 
@@ -333,7 +338,7 @@ sheet1.fill(3, 3, {type:'solid',fgColor:'2266aa',bgColor:'64'});
 sheet1.border(1, 1, {left:'medium',top:'medium',right:'thin',bottom:'medium'});
 ```
 
-### Sheet.numberFormat(col, row, numfmt)
+#### Sheet.numberFormat(col, row, numfmt)
 Specify a number format by string or index. Currently only Excel's built-in number formats are handled.
 
 Example:
@@ -375,7 +380,7 @@ sheet1.numberFormat(2,2, 10); // equivalent to above
 ```
 
 
-## Sheet.merge(from_cell, to_cell)
+### Sheet.merge(from_cell, to_cell)
 
 Merge some cell ranges
 
@@ -390,7 +395,7 @@ Example: Merge the first row as title from (1,1) to (5,1)
 ```javascript
 sheet1.merge({col:1,row:1},{col:5,row:1});
 ```
-## Sheet.autoFilter(filter_spec)
+### Sheet.autoFilter(filter_spec)
 The argument may be a range (e.g. `"$A1:$J12"`) or `true` in which case the entire sheet domain is used as the range.
 
 ## Sheet.sheetViews(obj)
@@ -403,7 +408,7 @@ Optionally toggle grid lines and set zoom scale:
       zoomScale: 50
     })
 
-## Sheet.split(ncols, nrows, state, activePane, topLeftCell)
+### Sheet.split(ncols, nrows, state, activePane, topLeftCell)
 
 Optionally freeze first rows and/or columns.  At a minimum specify the number of columns and rows.
 The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is calculated .
@@ -411,7 +416,7 @@ The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is
     sheet1.split(1, 2)
     sheet1.split(1, 2, "frozen", "bottomRight", "B2")
 
-## Sheet.pageSetup(obj)
+### Sheet.pageSetup(obj)
 
 Optionally set paper size, orientation, and resolution:
 
@@ -437,6 +442,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.3.10
+* Add `Sheet.form(ncols, nrows)`
 
 v0.3.9
 * Add `Sheet.split(ncols, nrows)`
