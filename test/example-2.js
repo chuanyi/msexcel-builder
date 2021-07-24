@@ -4,8 +4,12 @@ var JSZip = require('jszip');
 var path = require('path')
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
-var excelbuilder = require('..');
+function requireUncached(module) {
+  delete require.cache[require.resolve(module)];
+  return require(module);
+}
 
+const excelbuilder = requireUncached('..');
 
 describe('It generates a simple workbook', function () {
 

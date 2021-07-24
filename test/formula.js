@@ -1,11 +1,16 @@
-var fs = require('fs');
-var assert = require('assert');
-var JSZip = require('jszip');
+const fs = require('fs');
+const assert = require('assert');
+const JSZip = require('jszip');
 
-var excelbuilder = require('..');
-var OUTFILE = './lab/formula/workbook.xlsx';
-var TESTFILE = './test/files/formula.xlsx';
-var compareWorkbooks = require('./util/compareworkbooks.js')
+function requireUncached(module) {
+  delete require.cache[require.resolve(module)];
+  return require(module);
+}
+
+const excelbuilder = requireUncached('..');
+const OUTFILE = './lab/formula/formula.xlsx';
+const TESTFILE = './test/files/formula.xlsx';
+const compareWorkbooks = require('./util/compareworkbooks.js')
 
 
 describe('It applies autofilter', function () {
@@ -13,11 +18,11 @@ describe('It applies autofilter', function () {
 
   it('generates worksheet with formulas', function (done) {
 
-    var workbook = excelbuilder.createWorkbook()
+    const workbook = excelbuilder.createWorkbook()
 
     // Create a new worksheet with 10 columns and 12 rows
-    var sheet = workbook.createSheet('TEST', 10, 12);
-    var colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
+    const sheet = workbook.createSheet('TEST', 10, 12);
+    const colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
 
     for (var c = 0; c < 10; c++) {
       sheet.set(c + 1, 1, c);

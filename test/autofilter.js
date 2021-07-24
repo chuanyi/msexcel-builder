@@ -2,8 +2,12 @@ var fs = require('fs');
 var assert = require('assert');
 var JSZip = require('jszip');
 
-var excelbuilder = require('..');
-var OUTFILE = './test/out/autofilter.xlsx';
+function requireUncached(module) {
+  delete require.cache[require.resolve(module)];
+  return require(module);
+}
+
+const excelbuilder = requireUncached('..');var OUTFILE = './test/out/autofilter.xlsx';
 var TESTFILE = './test/files/autofilter.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
