@@ -6,7 +6,7 @@
     "xlsx",
     "excel"
   ],
-  "version": "0.3.11",
+  "version": "0.3.12",
   "repository": {
     "type": "git",
     "url": "git://github.com/protobi/msexcel-builder.git"

@@ -331,18 +331,39 @@ The options may contain:
 
 * `border_style` - (Object) border style options
 The options may contain:
+  * `left` - (String) | (Object)
+  * `top` - (String)  | (Object)
+  * `right` - (String)  | (Object)
+  * `bottom` - (String)  | (Obtject)
+  
+If (String) it may be `'thin'| 'medium'|'thick'|'double'`.
 
-  * `left` - (String) style: 'thin'/'medium'/'thick'/'double'
-  * `top` - (String) style: 'thin'/'medium'/'thick'/'double'
-  * `right` - (String) style: 'thin'/'medium'/'thick'/'double'
-  * `bottom` - (String) style: 'thin'/'medium'/'thick'/'double'
+If (Object) it may be:
+  `{
+      style: <string>,
+      color: { rgb: <string> } | { theme: <int> }`
 
+ 
 Example:
 
 ```javascript
 sheet1.font(2, 1, {name:'黑体',sz:'24',family:'3',scheme:'-',bold:'true',iter:'true', color: 'FFAA00'});
 sheet1.fill(3, 3, {type:'solid',fgColor:'2266aa',bgColor:'64'});
-sheet1.border(1, 1, {left:'medium',top:'medium',right:'thin',bottom:'medium'});
+sheet1.border(1, 1, {
+  left:'medium',
+  top: {
+    style: 'medium',
+    color: {rgb: "FFAA8844"}
+  },
+  right:'thin',
+  bottom: {
+    style: 'medium',
+    color: {
+      theme: 5
+    }
+  }}
+)
+
 ```
 
 #### Sheet.numberFormat(col, row, numfmt)

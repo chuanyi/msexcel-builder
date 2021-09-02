@@ -348,7 +348,7 @@ class Sheet
             c.ele('v', '' + (ix.v - 1))
           else if ix.dataType == 'number'
             c.ele 'v', '' + ix.v
-            
+
           if (@formulas[i] && @formulas[i][j])
             c.ele('f',@formulas[i][j])
 
@@ -462,7 +462,7 @@ class Style
     bder.right or= '-'
     bder.top or= '-'
     bder.bottom or= '-'
-    k = 'bder_' + bder.left + '_' + bder.right + '_' + bder.top + '_' + bder.bottom
+    k = JSON.stringify(["bder_",bder.left,bder.right, bder.top, bder.bottom])
     id = @cache[k]
     if id
       return id
@@ -549,8 +549,19 @@ class Style
       e = bders.ele('border')
       if o.left isnt '-' then e.ele('left', {style: o.left}).ele('color', {auto: '1'}) else e.ele('left')
       if o.right isnt '-' then e.ele('right', {style: o.right}).ele('color', {auto: '1'}) else e.ele('right')
-      if o.top isnt '-' then e.ele('top', {style: o.top}).ele('color', {auto: '1'}) else e.ele('top')
-      if o.bottom isnt '-' then e.ele('bottom', {style: o.bottom}).ele('color', {auto: '1'}) else e.ele('bottom')
+      if o.top isnt '-'
+        if typeof o.top is 'string'
+          e.ele('top', {style: o.top}).ele('color', {auto: '1'})
+        else
+          e.ele('top', {style: o.top.style}).ele('color', o.top.color)
+      else e.ele('top')
+      if o.bottom isnt '-'
+        if typeof o.bottom is 'string'
+          e.ele('top', {style: o.bottom}).ele('color', {auto: '1'})
+        else
+          e.ele('bottom', {style: o.bottom.style}).ele('color', o.bottom.color)
+      else e.ele('bottom')
+
       e.ele('diagonal')
     ss.ele('cellStyleXfs', {count: '1'}).ele('xf', {
       numFmtId: '0',
