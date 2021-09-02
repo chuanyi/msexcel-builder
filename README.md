@@ -52,13 +52,11 @@ or return a JSZip object that can be used to stream the contents (and even save 
 
 ```
 workbook.generate(function(err, jszip) {
-if (err)
-throw err;
-else {
-jszip.generateAsync({type: "nodebuffer"}).then(function(buffer) {
-require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {
-});
-}
+  if (err) throw err;
+  else {
+    jszip.generateAsync({type: "nodebuffer", compression: "DEFLATE"}).then(function(buffer) {
+    require('fs').writeFile(workbook.fpath + '/' + workbook.fname, buffer, function (err) {});
+  }
 });
 ```
 
@@ -70,6 +68,15 @@ You can now provide the file path on save rather than in the constructor:
       console.log("open \"" + path + "\"");
    });
 ```
+
+Further you can optionally compress the saved file:
+```js
+   workbook.save("/tmp/workbook.xlsx", {compressed: true}, function(err) {
+      if (err) throw err;
+      console.log("open \"" + path + "\"");
+   });
+```
+
 ## Use in browser
 
 This depends on `xmlbuilder` and `jszip` which are included in the direct

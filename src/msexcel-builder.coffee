@@ -602,14 +602,22 @@ class Workbook
     @sheets.push sheet
     return sheet
 
-  save: (target, cb) ->
+  save: (target, opts, cb) ->
     if (arguments.length == 1 && typeof target == 'function')
       cb = target
       target = @fpath + '/' + @fname
+      opts = {}
+    else if (arguments.length == 2 && typeof opts =='function')
+      cb = opts
+      opts = {}
 
     @generate (err, zip) ->
       buffer = undefined
-      buffer = zip.generateAsync({type: 'nodebuffer'}).then((buffer) ->
+      args = {type: 'nodebuffer'}
+      if (opts.compressed)
+        args.compressed = "DEFLATE"
+
+      buffer = zip.generateAsync(args).then((buffer) ->
         if err
           return cb(err)
         fs.writeFile target, buffer, cb
