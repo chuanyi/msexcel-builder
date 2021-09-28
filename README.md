@@ -444,6 +444,26 @@ The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is
     sheet1.split(1, 2)
     sheet1.split(1, 2, "frozen", "bottomRight", "B2")
 
+### Sheet.printBreakColumns([colIndexes])
+
+Optionally set page breaks at specific columns
+ 
+    sheet1.colBreaks([15,30,45])
+
+### Sheet.printBreakRows([rowIndexes])
+
+    sheet1.printBreakRows([15,30,45])
+
+### Sheet.printRepeatRows(start, end)
+Set rows to repeat on each printed page
+
+     sheet.printRepeatRows(1,3)
+
+### Sheet.printRepeatColumns(start, end)
+Set columns to repeat on each printed page
+
+    sheet.printRepeatColumns(1,2)
+
 ### Sheet.pageSetup(obj)
 
 Optionally set paper size, orientation, and resolution:

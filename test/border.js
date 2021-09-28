@@ -38,6 +38,18 @@ describe('It generates a simple workbook with styles applied concisely', functio
               theme: 5
             }
           },
+        right:{
+          style: 'thin',
+          color: {
+            theme: 4
+          }
+        },
+        left:{
+          style: 'thin',
+          color: {
+            rgb: "FFFFAA00"
+          }
+        },
       },
       align: 'center',
     });
@@ -51,7 +63,6 @@ describe('It generates a simple workbook with styles applied concisely', functio
         fs.writeFile(OUTFILE, buffer, function (err) {
           if (err) throw err;
           console.log("open \"" + OUTFILE + "\" ")
-          // done(err);
 
           compareWorkbooks(TESTFILE, OUTFILE, function (err, result) {
             if (!result) return done (new Error("Results don't match"))
