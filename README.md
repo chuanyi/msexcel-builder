@@ -455,14 +455,17 @@ Optionally set page breaks at specific columns
     sheet1.printBreakRows([15,30,45])
 
 ### Sheet.printRepeatRows(start, end)
-Set rows to repeat on each printed page
+Set rows to repeat on each printed page. 
+Arguments may be specified individually or as an array of length 2.
 
      sheet.printRepeatRows(1,3)
+     sheet.printRepeatRows([1,3])
 
 ### Sheet.printRepeatColumns(start, end)
-Set columns to repeat on each printed page
-
+Set columns to repeat on each printed page.
+Arguments may be specified individually or as an array of length 2.
     sheet.printRepeatColumns(1,2)
+    sheet.printRepeatColumns([1,2])
 
 ### Sheet.pageSetup(obj)
 

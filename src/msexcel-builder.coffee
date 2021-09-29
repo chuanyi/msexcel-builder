@@ -297,7 +297,10 @@ class Sheet
 
   sheetViews: (obj) ->
     for key, val of obj
-      @_sheetViews[key] = val
+      if (typeof this[key] == 'function')
+        this[key](obj[key])
+      else
+        @_sheetViews[key] = val
 
   split: (ncols, nrows, state, activePane, topLeftCell) ->
     state = state || "frozen"
