@@ -230,13 +230,14 @@ then the method will be called with that argument, e.g.
 
 ```js
  sheet1.set(1, 1, {
-      set: 'Red bold centered  with border',
+      set: 'Red, bold, italic, underlined and centered with border',
       font: {
         name: 'Verdana',
         sz: 32,
         color: "FF0022FF",
         bold: true,
-        iter: true
+        iter: true,
+        underline: true
       },
       align: 'center',
       fill: {
@@ -319,7 +320,11 @@ The options may contain:
   * `family` - (String) font family
   * `scheme` - (String) font scheme
   * `bold` - (String) if bold: 'true'/'false'
-  * `iter` - (String) if italic: 'true'/'false'
+  * `iter || italic` - (String) if italic: 'true'/'false'
+  * `underline`: (String) if underlined: 'true'/'false'
+  * `strike`: (String) if striked: 'true'/'false'
+  * `outline`: (String) if outline: 'true'/'false'
+  * `shadow`: (String) if underlined: 'true'/'false'
   * `color` - (String) font color as HEX RGB or ARGB value (e.g. `"2266AA"` or `"FF2266AA`"`)
 
 * `fill_style` - (Object) fill style options
