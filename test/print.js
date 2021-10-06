@@ -26,9 +26,6 @@ describe('It applies autofilter', function () {
 
     for (var c = 0; c < 100; c++) {
       sheet.set(c + 1, 1, colNames[c]);
-    }
-
-    for (var c = 0; c < 100; c++) {
       for (var r = 0; r < 200; r++) {
         sheet.set(c + 1, r + 2, r * c);
       }
@@ -37,6 +34,15 @@ describe('It applies autofilter', function () {
     sheet.autoFilter('A1:E12');
     sheet.sheetViews({
       showGridLines: "0",
+    })
+    sheet.pageMargins({
+      left: 0.25,
+      right: 0.25,
+      top: 0.5,
+      bottom: 0.5,
+      header: 0.3,
+      footer: 0.3
+
     })
     sheet.pageSetup({
       scale: "50",

@@ -219,6 +219,7 @@ class Sheet
     @row_ht = {}
     @styles = {}
     @formulas=[]
+    @_pageMargins= {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
 
 
   set: (col, row, str) ->
@@ -293,7 +294,12 @@ class Sheet
 
   }
 
-  _pageSetup: {paperSize: '9', orientation: 'portrait', horizontalDpi: '200', verticalDpi: '200'}
+  _pageSetup: {
+    paperSize: '9',
+    orientation: 'portrait',
+    horizontalDpi: '200',
+    verticalDpi: '200'
+    }
 
   sheetViews: (obj) ->
     for key, val of obj
@@ -323,6 +329,7 @@ class Sheet
   printBreakColumns: (arr) ->
     @_colBreaks = arr
 
+
   printRepeatRows: (start, end) ->
     if Array.isArray(start)
       @_repeatRows = {start: start[0], end: start[1]}
@@ -337,6 +344,11 @@ class Sheet
   pageSetup: (obj) ->
     for key, val of obj
       @_pageSetup[key] = val
+
+  pageMargins: (obj) ->
+    for key, val of obj
+      @_pageMargins[key] = val
+
 
   style_id: (col, row) ->
     inx = '_' + col + '_' + row
@@ -399,7 +411,8 @@ class Sheet
     if typeof @autofilter == 'string'
       ws.ele('autoFilter', {ref: @autofilter})
     ws.ele('phoneticPr', {fontId: '1', type: 'noConversion'})
-    ws.ele('pageMargins', {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'})
+
+    ws.ele('pageMargins', @_pageMargins)
     ws.ele('pageSetup', @_pageSetup)
 
     if @_rowBreaks && @_rowBreaks.length

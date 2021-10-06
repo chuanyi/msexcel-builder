@@ -439,7 +439,7 @@ Optionally toggle grid lines and set zoom scale:
 ### Sheet.split(ncols, nrows, state, activePane, topLeftCell)
 
 Optionally freeze first rows and/or columns.  At a minimum specify the number of columns and rows.
-The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is calculated .
+The state defaults to "frozen", activePane to "bottomRight" and "topLeftCell" is calculated.
 
     sheet1.split(1, 2)
     sheet1.split(1, 2, "frozen", "bottomRight", "B2")
@@ -473,9 +473,24 @@ Optionally set paper size, orientation, and resolution:
 
     sheet1.pageSetup({
       paperSize: '9', 
-      orientation: 'landscape', 
+      orientation: 'landscape' || 'portrait',
       horizontalDpi: '200', 
-      verticalDpi: '200'
+      verticalDpi: '200',
+      pageOrder: 'overThenDown' ,
+      scale: '50',
+    })
+
+### Sheet.pageMargins(obj)
+
+Optionally set margins, units in inches:
+
+    sheet.pageMargins({
+      left: 0.25,
+      right: 0.25,
+      top: 0.5,
+      bottom: 0.5,
+      header: 0.3,
+      footer: 0.3
     })
 
 ## Testing
