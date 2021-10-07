@@ -109,9 +109,9 @@ class XlWorkbook
     wb = xml.create('workbook', {version: '1.0', encoding: 'UTF-8', standalone: true})
     wb.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     wb.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
-    wb.ele('fileVersion ', {appName: 'xl', lastEdited: '4', lowestEdited: '4', rupBuild: '4505'})
+    wb.ele('fileVersion', {appName: 'xl', lastEdited: '4', lowestEdited: '4', rupBuild: '4505'})
     wb.ele('workbookPr', {filterPrivacy: '1', defaultThemeVersion: '124226'})
-    wb.ele('bookViews').ele('workbookView ', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
+    wb.ele('bookViews').ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
 
     tmp = wb.ele('sheets')
     for i in [1..@book.sheets.length]
@@ -497,7 +497,14 @@ class Style
     font.name or= 'Calibri'
     font.scheme or= 'minor'
     font.family or= '2'
-    k = 'font_' + font.bold + font.iter + font.sz + font.color + font.name + font.scheme + font.family
+
+    font.underline or= '-'
+    font.strike or= '-'
+    font.outline or= '-'
+    font.shadow or= '-'
+
+    k = 'font_' + font.bold + font.iter + font.sz + font.color + font.name + font.scheme + font.family + font.underline + font.strike + font.outline + font.shadow
+
     id = @cache[k]
     if id
       return id
@@ -591,6 +598,11 @@ class Style
       e = fonts.ele('font')
       e.ele('b') if o.bold isnt '-'
       e.ele('i') if o.iter isnt '-'
+      e.ele('u') if o.iter isnt '-'
+      e.ele('strike') if o.iter isnt '-'
+      e.ele('outline') if o.iter isnt '-'
+      e.ele('shadow') if o.iter isnt '-'
+
       e.ele('sz', {val: o.sz})
       e.ele('color', {rgb: o.color}) if o.color isnt '-'
       e.ele('name', {val: o.name})
@@ -612,7 +624,7 @@ class Style
 
       e = bders.ele('border')
 
-      if o.right isnt '-'
+      if o.left isnt '-'
         if typeof o.left is 'string'
           e.ele('left', {style: o.left}).ele('color', {auto: '1'})
         else
