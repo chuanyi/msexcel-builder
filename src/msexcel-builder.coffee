@@ -38,13 +38,289 @@ tool =
       column = (column - temp - 1) / 26
     return letter
 
+ImageType =
+  SVG: "image/svg+xml"
+  PNG: "image/png"
+# JPEG : 401
+
+Function::property = (prop, desc) ->
+  Object.defineProperty @prototype, prop, desc
+
+addressRegex = /^[A-Z]+\d+$/
+# =========================================================================
+# Column Letter to Number conversion
+colCache =
+  _dictionary: [
+    'A'
+    'B'
+    'C'
+    'D'
+    'E'
+    'F'
+    'G'
+    'H'
+    'I'
+    'J'
+    'K'
+    'L'
+    'M'
+    'N'
+    'O'
+    'P'
+    'Q'
+    'R'
+    'S'
+    'T'
+    'U'
+    'V'
+    'W'
+    'X'
+    'Y'
+    'Z'
+  ]
+  _l2nFill: 0
+  _l2n: {}
+  _n2l: []
+  _level: (n) ->
+    if n <= 26
+      return 1
+    if n <= 26 * 26
+      return 2
+    3
+  _fill: (level) ->
+    c = undefined
+    v = undefined
+    l1 = undefined
+    l2 = undefined
+    l3 = undefined
+    n = 1
+    if level >= 4
+      throw new Error('Out of bounds. Excel supports columns from 1 to 16384')
+    if @_l2nFill < 1 and level >= 1
+      while n <= 26
+        c = @_dictionary[n - 1]
+        @_n2l[n] = c
+        @_l2n[c] = n
+        n++
+      @_l2nFill = 1
+    if @_l2nFill < 2 and level >= 2
+      n = 27
+      while n <= 26 + 26 * 26
+        v = n - (26 + 1)
+        l1 = v % 26
+        l2 = Math.floor(v / 26)
+        c = @_dictionary[l2] + @_dictionary[l1]
+        @_n2l[n] = c
+        @_l2n[c] = n
+        n++
+      @_l2nFill = 2
+    if @_l2nFill < 3 and level >= 3
+      n = 26 + 26 * 26 + 1
+      while n <= 16384
+        v = n - (26 * 26 + 26 + 1)
+        l1 = v % 26
+        l2 = Math.floor(v / 26) % 26
+        l3 = Math.floor(v / (26 * 26))
+        c = @_dictionary[l3] + @_dictionary[l2] + @_dictionary[l1]
+        @_n2l[n] = c
+        @_l2n[c] = n
+        n++
+      @_l2nFill = 3
+    return
+  l2n: (l) ->
+    if !@_l2n[l]
+      @_fill l.length
+    if !@_l2n[l]
+      throw new Error('Out of bounds. Invalid column letter: ' + l)
+    @_l2n[l]
+  n2l: (n) ->
+    if n < 1 or n > 16384
+      throw new Error(n + ' is out of bounds. Excel supports columns from 1 to 16384')
+    if !@_n2l[n]
+      @_fill @_level(n)
+    @_n2l[n]
+  _hash: {}
+  validateAddress: (value) ->
+    if !addressRegex.test(value)
+      throw new Error('Invalid Address: ' + value)
+    true
+  decodeAddress: (value) ->
+    addr = value.length < 5 and @_hash[value]
+    if addr
+      return addr
+    hasCol = false
+    col = ''
+    colNumber = 0
+    hasRow = false
+    row = ''
+    rowNumber = 0
+    i = 0
+    char = undefined
+    while i < value.length
+      char = value.charCodeAt(i)
+      # col should before row
+      if !hasRow and char >= 65 and char <= 90
+# 65 = 'A'.charCodeAt(0)
+# 90 = 'Z'.charCodeAt(0)
+        hasCol = true
+        col += value[i]
+        # colNumber starts from 1
+        colNumber = colNumber * 26 + char - 64
+      else if char >= 48 and char <= 57
+# 48 = '0'.charCodeAt(0)
+# 57 = '9'.charCodeAt(0)
+        hasRow = true
+        row += value[i]
+        # rowNumber starts from 0
+        rowNumber = rowNumber * 10 + char - 48
+      else if hasRow and hasCol and char != 36
+# 36 = '$'.charCodeAt(0)
+        break
+      i++
+    if !hasCol
+      colNumber = undefined
+    else if colNumber > 16384
+      throw new Error('Out of bounds. Invalid column letter: ' + col)
+    if !hasRow
+      rowNumber = undefined
+    # in case $row$col
+    value = col + row
+    address =
+      address: value
+      col: colNumber
+      row: rowNumber
+      $col$row: '$' + col + '$' + row
+    # mem fix - cache only the tl 100x100 square
+    if colNumber <= 100 and rowNumber <= 100
+      @_hash[value] = address
+      @_hash[address.$col$row] = address
+    address
+  getAddress: (r, c) ->
+    if c
+      address = @n2l(c) + r
+      return @decodeAddress(address)
+    @decodeAddress r
+  decode: (value) ->
+    parts = value.split(':')
+    if parts.length == 2
+      tl = @decodeAddress(parts[0])
+      br = @decodeAddress(parts[1])
+      result =
+        top: Math.min(tl.row, br.row)
+        left: Math.min(tl.col, br.col)
+        bottom: Math.max(tl.row, br.row)
+        right: Math.max(tl.col, br.col)
+      # reconstruct tl, br and dimensions
+      result.tl = @n2l(result.left) + result.top
+      result.br = @n2l(result.right) + result.bottom
+      result.dimensions = result.tl + ':' + result.br
+      return result
+    @decodeAddress value
+  decodeEx: (value) ->
+    groups = value.match(/(?:(?:(?:'((?:[^']|'')*)')|([^'^ !]*))!)?(.*)/)
+    sheetName = groups[1] or groups[2]
+    # Qouted and unqouted groups
+    reference = groups[3]
+    # Remaining address
+    parts = reference.split(':')
+    if parts.length > 1
+      tl = @decodeAddress(parts[0])
+      br = @decodeAddress(parts[1])
+      top = Math.min(tl.row, br.row)
+      left = Math.min(tl.col, br.col)
+      bottom = Math.max(tl.row, br.row)
+      right = Math.max(tl.col, br.col)
+      tl = @n2l(left) + top
+      br = @n2l(right) + bottom
+      return {
+        top: top
+        left: left
+        bottom: bottom
+        right: right
+        sheetName: sheetName
+        tl:
+          address: tl
+          col: left
+          row: top
+          $col$row: '$' + @n2l(left) + '$' + top
+          sheetName: sheetName
+        br:
+          address: br
+          col: right
+          row: bottom
+          $col$row: '$' + @n2l(right) + '$' + bottom
+          sheetName: sheetName
+        dimensions: tl + ':' + br
+      }
+    if reference.startsWith('#')
+      return if sheetName then {
+        sheetName: sheetName,
+        error: reference
+      } else {error: reference}
+    address = @decodeAddress(reference)
+    if sheetName then {
+      sheetName: sheetName,
+      address: address.address,
+      col: address.col,
+      row: address.row,
+      $col$row: '$' + col + '$' + row
+    } else address
+  encodeAddress: (row, col) ->
+    colCache.n2l(col) + row
+  encode: ->
+    switch arguments.length
+      when 2
+        return colCache.encodeAddress(arguments[0], arguments[1])
+      when 4
+        return colCache.encodeAddress(arguments[0], arguments[1]) + ':' + colCache.encodeAddress(arguments[2], arguments[3])
+      else
+        throw new Error('Can only encode with 2 or 4 arguments')
+    return
+  inRange: (range, address) ->
+    left = range[0]
+    top = range[1]
+    right = range[range.length - 2]
+    bottom = range[range.length - 1]
+    # const [left, top, , right, bottom] = range;
+    col = address[0]
+    row = address[1]
+    col >= left and col <= right and row >= top and row <= bottom
+# ---
+
 
 class ContentTypes
   constructor: (@book)->
+  _getKnowImageTypes: () ->
+    imagesToAdd = []
+    debugger;
+    imagesToAddDistinct = {}
+    for sheet in @book.sheets
+      for image in sheet.images
+        unless not imagesToAddDistinct[image.extension]
+          imagesToAdd.push({Extension: image.extension, ContentType: image.contentType})
+    imagesToAdd
 
   toxml: ()->
     types = xml.create('Types', {version: '1.0', encoding: 'UTF-8', standalone: true})
     types.att('xmlns', 'http://schemas.openxmlformats.org/package/2006/content-types')
+
+
+    # TODO remove fixed types here
+    types.ele('Default', {Extension: 'png', ContentType: 'image/png'})
+    types.ele('Default', {Extension: 'svg', ContentType: 'image/svg+xml'})
+    types.ele('Default', {Extension: 'rels', ContentType: 'application/vnd.openxmlformats-package.relationships+xml'})
+    types.ele('Default', {Extension: 'xml', ContentType: 'application/xml'})
+
+    types.ele('Override', {
+      PartName: '/xl/workbook.xml',
+      ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml'
+    })
+    for i in [1..@book.sheets.length]
+      types.ele('Override', {
+        PartName: '/xl/worksheets/sheet' + i + '.xml',
+        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'
+      })
+
     types.ele('Override', {
       PartName: '/xl/theme/theme1.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.theme+xml'
@@ -53,30 +329,35 @@ class ContentTypes
       PartName: '/xl/styles.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml'
     })
-    types.ele('Default', {Extension: 'rels', ContentType: 'application/vnd.openxmlformats-package.relationships+xml'})
-    types.ele('Default', {Extension: 'xml', ContentType: 'application/xml'})
+    for sheet in @book.sheets
+      for image in sheet.images
+        types.ele('Override', {
+          PartName: '/xl/drawings/drawing' + image.id + '.xml',
+          ContentType: 'application/vnd.openxmlformats-officedocument.drawing+xml'
+        })
     types.ele('Override', {
-      PartName: '/xl/workbook.xml',
-      ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml'
+      PartName: '/docProps/core.xml',
+      ContentType: 'application/vnd.openxmlformats-package.core-properties+xml'
     })
     types.ele('Override', {
       PartName: '/docProps/app.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.extended-properties+xml'
     })
-    for i in [1..@book.sheets.length]
+
+    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
       types.ele('Override', {
-        PartName: '/xl/worksheets/sheet' + i + '.xml',
-        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'
-      })
+        PartName: '/xl/calcChain.xml',
+        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
+      });
+
+    # for knowImageType in @_getKnowImageTypes
+    # 	types.ele('Default', knowImageType)
     types.ele('Override', {
       PartName: '/xl/sharedStrings.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml'
     })
-    types.ele('Override', {
-      PartName: '/docProps/core.xml',
-      ContentType: 'application/vnd.openxmlformats-package.core-properties+xml'
-    })
-    return types.end()
+
+    return types.end({pretty: true})
 
 class DocPropsApp
   constructor: (@book)->
@@ -99,7 +380,7 @@ class DocPropsApp
     props.ele('SharedDoc', 'false')
     props.ele('HyperlinksChanged', 'false')
     props.ele('AppVersion', '12.0000')
-    return props.end()
+    return props.end({pretty: true})
 
 class XlWorkbook
   constructor: (@book)->
@@ -109,6 +390,14 @@ class XlWorkbook
     wb = xml.create('workbook', {version: '1.0', encoding: 'UTF-8', standalone: true})
     wb.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     wb.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+    wb.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
+    wb.att('mc:Ignorable', "x15 xr xr6 xr10 xr2")
+    wb.att('xmlns:x15', "http://schemas.microsoft.com/office/spreadsheetml/2010/11/main")
+    wb.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
+    wb.att('xmlns:xr6', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision6")
+    wb.att('xmlns:xr10', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision10")
+    wb.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
+
     wb.ele('fileVersion', {appName: 'xl', lastEdited: '4', lowestEdited: '4', rupBuild: '4505'})
     wb.ele('workbookPr', {filterPrivacy: '1', defaultThemeVersion: '124226'})
     wb.ele('bookViews').ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
@@ -147,10 +436,9 @@ class XlWorkbook
     wb.ele('calcPr', {calcId: '124519'})
 
 
+    return wb.end({pretty: true})
 
-    return wb.end()
-
-class XlRels
+class XlWorkbookRels
   constructor: (@book)->
 
   toxml: ()->
@@ -177,7 +465,44 @@ class XlRels
       Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings',
       Target: 'sharedStrings.xml'
     })
-    return rs.end()
+    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
+      rs.ele('Relationship', {
+        Id: 'rId' + (this.book.sheets.length + 4),
+        Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain',
+        Target: 'calcChain.xml'
+      });
+    return rs.end({pretty: true})
+
+class XlWorksheetRels
+  constructor: (@wsRels) ->
+  generate: () ->
+
+  toxml: () ->
+    rs = xml.create('Relationships', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    rs.att('xmlns', 'http://schemas.openxmlformats.org/package/2006/relationships')
+    for wsRel in @wsRels
+      rs.ele('Relationship', {
+        Id: wsRel.id,
+        Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
+        Target: wsRel.target
+      })
+    rs.end({pretty: true})
+
+class XlDrawingRels
+  constructor: (@dwRels) ->
+  generate: () ->
+
+  toxml: () ->
+    rs = xml.create('Relationships', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    rs.att('xmlns', 'http://schemas.openxmlformats.org/package/2006/relationships')
+    for dwRel in @dwRels
+      rs.ele('Relationship', {
+        Id: dwRel.id,
+# Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+        Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+        Target: dwRel.target
+      })
+    rs.end({pretty: true})
 
 class SharedStrings
   constructor: ()->
@@ -202,12 +527,148 @@ class SharedStrings
       si = sst.ele('si')
       si.ele('t', @arr[i])
       si.ele('phoneticPr', {fontId: 1, type: 'noConversion'})
-    return sst.end()
+    return sst.end({pretty: true})
+
+class Anchor
+  constructor: (@worksheet, address, offset) ->
+    if offset == undefined
+      offset = 0
+    if !address
+      @nativeCol = 0
+      @nativeColOff = 0
+      @nativeRow = 0
+      @nativeRowOff = 0
+    else if typeof address == 'string'
+      decoded = colCache.decodeAddress(address)
+      @nativeCol = decoded.col + offset
+      @nativeColOff = 0
+      @nativeRow = decoded.row + offset
+      @nativeRowOff = 0
+    else if address.nativeCol != undefined
+      @nativeCol = address.nativeCol or 0
+      @nativeColOff = address.nativeColOff || 0
+      @nativeRow = address.nativeRow or 0
+      @nativeRowOff = address.nativeRowOff || 0
+    else if address.col != undefined
+      @col = address.col + offset
+      @row = address.row + offset
+    else
+      @nativeCol = 0
+      @nativeColOff = 0
+      @nativeRow = 0
+      @nativeRowOff = 0
+    return
+
+  @property 'col', {
+    get: -> @nativeCol + Math.min(@colWidth - 1, @nativeColOff) / @colWidth
+    set: (v) ->
+      @nativeCol = Math.floor(v)
+      @nativeColOff = Math.floor((v - (@nativeCol)) * @colWidth)
+      return
+    enumerable: true
+    configurable: true
+  }
+  @property 'row', {
+    get: ->
+      @nativeRow + Math.min(@rowHeight - 1, @nativeRowOff) / @rowHeight
+    set: (v) ->
+      @nativeRow = Math.floor(v)
+      @nativeRowOff = Math.floor((v - (@nativeRow)) * @rowHeight)
+      return
+    enumerable: true
+    configurable: true
+  }
+  @property 'colWidth', {
+    get: ->
+      if @worksheet and @worksheet.width(@nativeCol, @nativeCol + 1) then
+#  and @worksheet.getColumn(@nativeCol + 1).isCustomWidth then
+# Math.floor(@worksheet.getColumn(@nativeCol + 1).width * 10000) else 640000
+    enumerable: true
+    configurable: true
+  }
+  @property 'rowHeight', {
+    get: ->
+      if @worksheet and @worksheet.getRow(@nativeRow + 1) and @worksheet.getRow(@nativeRow + 1).height then Math.floor(@worksheet.getRow(@nativeRow + 1).height * 10000) else 180000
+    enumerable: true
+    configurable: true
+  }
+  @property 'model', {
+    get: -> {
+      nativeCol: @nativeCol
+      nativeColOff: @nativeColOff
+      nativeRow: @nativeRow
+      nativeRowOff: @nativeRowOff
+    },
+    set: (value) ->
+      @nativeCol = value.nativeCol
+      @nativeColOff = value.nativeColOff
+      @nativeRow = value.nativeRow
+      @nativeRowOff = value.nativeRowOff
+      return
+    enumerable: true
+    configurable: true
+  }
+
+  asInstance = (model) ->
+    if model instanceof Anchor or model == null then model else new Anchor(model)
+
+  toxml: (xml)->
+    wb = xml.create('workbook', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    wb.ele('from')
+      .ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
+
+    wb.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+    wb.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+
+    wb.ele('fileVersion', {appName: 'xl', lastEdited: '4', lowestEdited: '4', rupBuild: '4505'})
+    wb.ele('workbookPr', {filterPrivacy: '1', defaultThemeVersion: '124226'})
+    wb.ele('bookViews').ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
+
+
+class Image
+  # constructor: (@content, @contentType)
+  constructor: (@worksheet, @model) ->
+
+  @property 'model', {
+    get: () ->
+      switch (@type)
+        when 'background' then return {type: @type, imageId: @imageId}
+        when 'image' then return{
+          type: @type,
+          imageId: @imageId,
+          hyperlinks: @range.hyperlinks,
+          range: {
+            tl: @range.tl.model,
+            br: @range.br && @range.br.model,
+            ext: @range.ext,
+            editAs: @range.editAs,
+          }
+        }
+        else throw new Error('Invalid Image Type')
+      set: (model) ->
+        @type = model.type;
+        @imageId = model.imageId;
+
+        if model.type == 'image'
+          if typeof model.range == 'string'
+            decoded = colCache.decode(model.range)
+            @range = {
+              tl: new Anchor(@worksheet, {col: decoded.left, row: decoded.top}, -1),
+              br: new Anchor(@worksheet, {col: decoded.right, row: decoded.bottom}, 0),
+              editAs: 'oneCell',
+            }
+          else @range = {
+            tl: new Anchor(@worksheet, model.range.tl, 0),
+            br: model.range.br && new Anchor(@worksheet, model.range.br, 0),
+            ext: model.range.ext,
+            editAs: model.range.editAs,
+            hyperlinks: model.hyperlinks || model.range.hyperlinks,
+          }
+  }
 
 class Sheet
   constructor: (@book, @name, @cols, @rows) ->
-    @name = @name.replace(/[/*:?\[\]]/g, '-');
-
+    @name = @name.replace(/[/*:?\[\]]/g, '-')
 
     @data = {}
     for i in [1..@rows]
@@ -220,7 +681,66 @@ class Sheet
     @styles = {}
     @formulas=[]
     @_pageMargins= {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
+    @images = []
 
+# validates exclusivity between filling base64, filename, buffer properties.
+# validates extension is among supported types.
+# concurrency this is a critical path add semaphor, only one image can be added at the time.
+# there's a risk of adding image in parallel and returing diferent id between push and returning.
+# exceljs also contains same risk, despite of collecting id before.
+  addImage: (image) ->
+    if !image || !image.range || !image.base64 || !image.extension
+      throw Error('please verify your image format')
+
+
+    ## tries to decode range
+    if (typeof image.range != 'string') || !/\w+\d+:\w+\d/i.test(image.range)
+      throw Error('Please provide range parameter like `B2:F6`.')
+
+    decoded = colCache.decode(image.range);
+    @range = {
+      from: new Anchor(@worksheet, decoded.tl, -1),
+      to: new Anchor(@worksheet, decoded.br, 0),
+      editAs: 'oneCell',
+    }
+
+    ## tries to uncompress base64
+
+    id = @book.medias.length + 1
+    imageToAdd = new Image(id, image.extension, image.base64, @range)
+    media = @book._addMediaFromImage(imageToAdd)
+    # drawingId = @book._addDrawingFromImage(imageToAdd)
+    # wsDwRelId = @sheet._addDrawingFromImage(imageToAdd)
+    @images.push(imageToAdd)
+
+    return id
+
+  getImage: (id) -> @images[id]
+
+  getImages: () ->
+    @images
+
+  removeImage: (id) ->
+    foundIndex = -1
+    for image, index in @images
+      if image.id == id
+        foundIndex = index
+        break
+    if foundIndex > -1
+      @images.splice(foundIndex, 1)
+
+  ### old approach for adding background images.
+    addBackgroundImage: (imageId) ->
+      model = {
+        type: 'background',
+        imageId,
+      }
+      @_media.push(new Image(this, model))
+
+    getBackgroundImageId: ()->
+      image = @_media.find(m => m.type == 'background')
+      return image && image.imageId
+  ###
 
   set: (col, row, str) ->
     if str instanceof Date
@@ -248,13 +768,21 @@ class Sheet
     if (typeof str == 'string')
       @formulas = @formulas || []
       @formulas[row] = @formulas[row] || []
+      sheet_idx = i for sheet, i in @book.sheets when sheet.name == @name
+      @book.cc.add_ref(sheet_idx, col, row)
       @formulas[row][col] = str
 
   merge: (from_cell, to_cell) ->
     @merges.push({from: from_cell, to: to_cell})
 
   width: (col, wd) ->
-    @col_wd.push {c: col, cw: wd}
+    @col_wd.push({c: col, cw: wd})
+
+  getColWidth: (col) ->
+    for _col in @col_wd
+      if _col.c == col
+        return Math.floor(_col.cw * 10000)
+    return 640000
 
   height: (row, ht) ->
     @row_ht[row] = ht
@@ -372,6 +900,14 @@ class Sheet
     ws = xml.create('worksheet', {version: '1.0', encoding: 'UTF-8', standalone: true})
     ws.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     ws.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
+    ws.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
+
+    ws.att('mc:Ignorable', "x14ac xr xr2 xr3")
+    ws.att('xmlns:x14ac', "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac")
+    ws.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
+    ws.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
+    ws.att('xmlns:xr3', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3")
+
     ws.ele('dimension', {ref: 'A1'})
 
     ws.ele('sheetViews').ele('sheetView', @_sheetViews).ele('pane', @_sheetViewsPane)
@@ -395,14 +931,14 @@ class Sheet
         if (ix.v isnt null and ix.v isnt undefined) or (sid isnt 1)
           c = r.ele('c', {r: '' + tool.i2a(j) + i})
           c.att('s', '' + (sid - 1)) if sid isnt 1
-          if ix.dataType == 'string'
+          if (@formulas[i] && @formulas[i][j])
+            c.ele('f', '' + @formulas[i][j])
+            c.ele('v')
+          else if ix.dataType == 'string'
             c.att('t', 's')
             c.ele('v', '' + (ix.v - 1))
           else if ix.dataType == 'number'
             c.ele 'v', '' + ix.v
-
-          if (@formulas[i] && @formulas[i][j])
-            c.ele('f',@formulas[i][j])
 
     if @merges.length > 0
       mc = ws.ele('mergeCells', {count: @merges.length})
@@ -425,7 +961,31 @@ class Sheet
       for i in @_colBreaks
         cb.ele('brk', { id: i, man: '1'})
 
-    return ws.end()
+    for wsRel in @wsRels
+      ws.ele('drawing', {'r:id': wsRel.id})
+
+    ws.end({pretty: true})
+
+class CalcChain
+
+  constructor: (@book)->
+    @cache = {}
+
+  add_ref: (idx, col, row)->
+    num = idx + 1
+    if !@cache.hasOwnProperty(num)
+      @cache[num] = []
+    @cache[num].push(tool.i2a(col) + row)
+
+  toxml: ()->
+    cc = xml.create('calcChain', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    cc.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+
+    for key, val of @cache
+      for el in val
+        cc.ele('c', {r: '' + el, i: '' + key})
+
+    return cc.end({pretty: true})
 
 class Style
 
@@ -598,10 +1158,10 @@ class Style
       e = fonts.ele('font')
       e.ele('b') if o.bold isnt '-'
       e.ele('i') if o.iter isnt '-'
-      e.ele('u') if o.iter isnt '-'
-      e.ele('strike') if o.iter isnt '-'
-      e.ele('outline') if o.iter isnt '-'
-      e.ele('shadow') if o.iter isnt '-'
+      e.ele('u') if o.underline isnt '-'
+      e.ele('strike') if o.strike isnt '-'
+      e.ele('outline') if o.outline isnt '-'
+      e.ele('shadow') if o.shadow isnt '-'
 
       e.ele('sz', {val: o.sz})
       e.ele('color', {rgb: o.color}) if o.color isnt '-'
@@ -679,13 +1239,112 @@ class Style
         ea = e.ele('alignment', {
           textRotation: (if o.rotate is '-' then '0' else o.rotate),
           horizontal: (if o.align is '-' then 'left' else o.align),
-          vertical: (if o.valign is '-' then 'top' else o.valign)
+          vertical: (if o.valign is '-' then 'bottom' else o.valign)
         })
         ea.att('wrapText', '1') if o.wrap isnt '-'
     ss.ele('cellStyles', {count: '1'}).ele('cellStyle', {name: 'Normal', xfId: '0', builtinId: '0'})
     ss.ele('dxfs', {count: '0'})
     ss.ele('tableStyles', {count: '0', defaultTableStyle: 'TableStyleMedium9', defaultPivotStyle: 'PivotStyleLight16'})
-    return ss.end()
+    return ss.end({pretty: true})
+
+class Image
+  constructor: (@id, @extension, @content, @range) ->
+    @editAs = 'oneCell'
+
+
+  publish: (sheet, zip, media)->
+## Inject image, it's used by sheet
+## 1. write data to media folder
+##    convert base 64 to text
+##    define filename based on number of existing medias
+##    writes to media
+##
+## 2. create reference for media to drawing
+## 3. create the actual drawing using reference for media and set location
+## 4. creates reference for drawing to sheet.
+## 5. use image rel to sheet.
+
+  toDrawingXml: (svgVersionRel)->
+    pngVersionRel = 'rId1'
+    # svgVersionRel = 'rId2'
+
+    dr = xml.create('xdr:wsDr', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    # dr.att('xmlns:xdr', 'http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing')
+    dr.att('xmlns:xdr', 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing')
+    # dr.att('xmlns:a', 'http://purl.oclc.org/ooxml/drawingml/main')
+    dr.att('xmlns:a', 'http://schemas.openxmlformats.org/drawingml/2006/main')
+
+    twoCellAnchor = dr.ele('xdr:twoCellAnchor', {editAs: @editAs})
+
+    _from = twoCellAnchor.ele('xdr:from') # {col: 0, colOff: 0, row: 1, rowOff: 0})
+    _from.ele('xdr:col', @range.from.model.nativeCol)
+    _from.ele('xdr:colOff', @range.from.model.nativeColOff)
+    _from.ele('xdr:row', @range.from.model.nativeRow)
+    _from.ele('xdr:rowOff', @range.from.model.nativeRowOff)
+
+    _to = twoCellAnchor.ele('xdr:to') # {col: 5, colOff: 419100, row: 16, rowOff: 0})
+    _to.ele('xdr:col', @range.to.model.nativeCol)
+    _to.ele('xdr:colOff', @range.to.model.nativeColOff)
+    _to.ele('xdr:row', @range.to.model.nativeRow)
+    _to.ele('xdr:rowOff', @range.to.model.nativeRowOff)
+
+    pic = twoCellAnchor.ele('xdr:pic')
+    nvPicPr = pic.ele('xdr:nvPicPr')
+    ## Graphic name printed on xml are not seen or used as reference
+    ## Skiping proper calculation part and just finding a random until 100000
+    graphic_index = 30924 || Math.round(Math.random() * 100000)
+    cNvPr = nvPicPr.ele('xdr:cNvPr', {id: 3, name: 'Graphic ' + graphic_index})
+    cNvPr.ele('a:extLst')
+      .ele('a:ext', {uri: '{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}'})
+      .ele('a16:creationId', {
+      'xmlns:a16': 'http://schemas.microsoft.com/office/drawing/2014/main'
+    , 'id': '{9D66B5F7-2553-484C-A5BE-4D0B8D57E08B}'
+    })
+    nvPicPr.ele('xdr:cNvPicPr')
+      .ele('a:picLocks', {noChangeAspect: 1})
+
+    blipFill = pic.ele('xdr:blipFill')
+
+
+    blipModel = {
+      'xmlns:r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+    }
+
+    if (pngVersionRel)
+      blipModel["r:embed"]=pngVersionRel
+
+    blipModel['cstate'] = "print"
+    blip = blipFill.ele('a:blip', blipModel)
+    extLst = blip.ele('a:extLst')
+    ext = extLst.ele('a:ext', {
+      'uri': '{28A0092B-C50C-407E-A947-70E740481C1C}'
+    })
+    ext.ele('a14:useLocalDpi', {
+      'xmlns:a14': 'http://schemas.microsoft.com/office/drawing/2010/main'
+    , 'val': 0
+    })
+
+    #		if !!svgVersionRel
+    #			ext = extLst.ele('a:ext', {
+    #				'uri': '{96DAC541-7B7A-43D3-8B79-37D633B846F1}'
+    #			})
+    #			ext.ele('asvg:svgBlip', {
+    #				'xmlns:asvg':'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
+    #				, 'r:embed': svgVersionRel
+    #			})
+
+
+    blipFill.ele('a:stretch')
+    blipFill.ele('srcRect')
+    #.ele('a:fillRect')
+    spPr = pic.ele('xdr:spPr')
+    xfrm = spPr.ele('a:xfrm')
+    xfrm.ele('a:off', {'x': 609600, 'y': 190500})
+    xfrm.ele('a:ext', {'cx': 2857500, 'cy': 2857500})
+    spPr.ele('a:prstGeom', {'prst': 'rect'}).ele('a:avLst')
+
+    twoCellAnchor.ele('xdr:clientData')
+    dr.end({pretty: true})
 
 class Workbook
   constructor: (@fpath, @fname) ->
@@ -693,17 +1352,43 @@ class Workbook
     # create temp folder & copy template data
     # init
     @sheets = []
+    @medias = []
     @ss = new SharedStrings
     @ct = new ContentTypes(@)
     @da = new DocPropsApp(@)
     @wb = new XlWorkbook(@)
-    @re = new XlRels(@)
+    @wbre = new XlWorkbookRels(@)
     @st = new Style(@)
+    @cc = new CalcChain(@)
+# @wsre = new XlSheetRels(@)
+# @dw = new XlDrawing(@)
+# @dwre = new XlDrawingRels(@)
 
   createSheet: (name, cols, rows) ->
     sheet = new Sheet(@, name, cols, rows)
     @sheets.push sheet
     return sheet
+
+  _addMediaFromImage: (image) ->
+## converts image into proper media data structure
+    @medias.push({image: image})
+
+  _removeMediaFromImage: (image) ->
+    foundIndex = -1
+    ## find image.
+    for media, i in @medias
+      if media.image.id = image.id
+        foundIndex = i
+        break
+    ## remove it if found.
+    @medias.splice(foundIndex, 1) unless foundIndex > -1
+
+# _addDrawingFromImage: (image, media) ->
+##
+## @dwMediaRel = {}
+## @dwMediaRels.push(dwMediaRel)
+## @dw = {}
+## @dws.push(dw)
 
   save: (target, opts, cb) ->
     if (arguments.length == 1 && typeof target == 'function')
@@ -742,13 +1427,47 @@ class Workbook
     # 4 - build xl/sharedStrings.xml
     zip.file('xl/sharedStrings.xml', @ss.toxml())
     # 5 - build xl/_rels/workbook.xml.rels
-    zip.file('xl/_rels/workbook.xml.rels', @re.toxml())
-    # 6 - build xl/worksheets/sheet(1-N).xml
-    for i in [0...@sheets.length]
+    zip.file('xl/_rels/workbook.xml.rels', @wbre.toxml())
+
+    wbMediaCounter = 1 # workbook media counter, per generation
+
+    for sheet, i in @sheets
+      sheet.wsRels = []
+
+      for image, j in sheet.images
+
+        dwRels = [] # drawing media list, for this release, one per drawing
+        relId = 'rId' + (sheet.wsRels.length + 1) # same for both media to drawing OR sheet to drawing rels.
+
+        # - build xl/media/image(1-N).xml
+        mediaFilename = [wbMediaCounter, '.', image.extension].join('')
+        zip.file('xl/media/image' + mediaFilename, image.content, {base64: true})
+        dwRels.push({id: relId, target: '../media/image' + mediaFilename})
+
+        # - build xl/drawings/drawing(1-N).xml
+        drawingFilename = wbMediaCounter + '.xml'
+        sheet.wsRels.push({id: relId, target: '../drawings/drawing' + drawingFilename})
+        zip.file('xl/drawings/drawing' + drawingFilename, image.toDrawingXml(relId))
+
+        # - build xl/drawings/_rels/drawing(1-N).xml.rels
+        zip.file('xl/drawings/_rels/drawing' + wbMediaCounter + '.xml.rels', new XlDrawingRels(dwRels).toxml())
+
+        wbMediaCounter++
+
+      # - build xl/worksheets/_rels/sheet(1-N).xml.rels
+      zip.file('xl/worksheets/_rels/sheet' + (i + 1) + '.xml.rels', new XlWorksheetRels(sheet.wsRels).toxml())
+
+      # - build xl/worksheets/sheet(1-N).xml
       zip.file('xl/worksheets/sheet' + (i + 1) + '.xml', @sheets[i].toxml())
     # 7 - build xl/styles.xml
     zip.file('xl/styles.xml', @st.toxml())
-    cb null, zip
+
+    # 8 - build xl/calcChain.xml
+    if Object.getOwnPropertyNames(@cc.cache).length > 0
+      zip.file('xl/calcChain.xml', @cc.toxml())
+    # 9 - build xl/worksheets/sheet(1-N).xml
+
+    cb(null, zip)
 
   cancel: () ->
 # delete temp folder
