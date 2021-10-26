@@ -172,3 +172,9 @@ node_modules
 
 #Experimental area
 lab/
+
+
+#############
+# Test output
+#############
+test/out/*.xlsx

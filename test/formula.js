@@ -8,7 +8,7 @@ function requireUncached(module) {
 }
 
 const excelbuilder = requireUncached('..');
-const OUTFILE = './lab/formula/formula.xlsx';
+const OUTFILE = './test/out/formula.xlsx';
 const TESTFILE = './test/files/formula.xlsx';
 const compareWorkbooks = require('./util/compareworkbooks.js')
 
@@ -21,22 +21,30 @@ describe('It applies autofilter', function () {
     const workbook = excelbuilder.createWorkbook()
 
     // Create a new worksheet with 10 columns and 12 rows
-    const sheet = workbook.createSheet('TEST', 10, 12);
-    const colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA'.split(',');
+    const cols = 26;
+    const rows = 52;
+    const sheet = workbook.createSheet('TEST', cols, rows);
+    const colNames = 'ALPHA,BRAVO,CHARLIE,DELTA,ECHO,FOXTROT,GOLF,HOTEL,INDIA,JULIETT,KILO,LIMA,MIKE,NOVEMBER,OSCAR,PAPA,QUEBEC,ROMEO,SIERRA,TANGO,UNIFORM,VICTOR,WHISKEY,X RAY,YANKEE,ZULU'.split(',');
 
-    for (var c = 0; c < 10; c++) {
+    for (var c = 0; c < cols; c++) {
       sheet.set(c + 1, 1, c);
     }
 
-    for (var r = 0; r < 11; r++) {
+    for (var r = 0; r < (rows - 1); r++) {
       sheet.set( 1, r + 1, r);
     }
 
-    for (var c = 0; c < 10; c++) {
-      for (var r = 0; r < 11; r++) {
-        sheet.formula(c + 2, r + 2, `=${('ABCDEFGHIJKLMNOPQRST')[c+1]}1 * A${r+2}`);
+    for (var c = 0; c < (cols - 1); c++) {
+      for (var r = 0; r < (rows - 2); r++) {
+        sheet.formula(c + 2, r + 2, `${('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[c+1]}1 * A${r+2}`);
       }
     }
+
+    for (var c = 0; c < (cols - 1); c++) {
+        sheet.formula(c + 2, rows, `SUM(${('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[c+1]}2:${('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[c+1]}${rows-1}) - ${('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[c]}${rows}`);
+    }
+
+
     sheet.split(1,1)
 
     workbook.generate(function (err, zip) {

@@ -13,7 +13,7 @@ module.exports = function (path1, path2, callback) {
           zip1.file(key).async("string").then(function (text1) {
 
             zip2.file(key).async("string").then(function (text2) {
-
+              //console.log('match?',key, text1==text2)
               return cb(null, text1 == text2);
             }).catch(function (err) {
               return cb(err);
@@ -30,11 +30,12 @@ module.exports = function (path1, path2, callback) {
       var fileKeys = Object.keys(zip1.files);
       async.map(fileKeys, compareOne, function (err, results) {
         if (err) return callback(err)
-        
+
         else {
 
           for (var i = 0; i < results.length; i++) {
             if (!results[i]) {
+
               return callback(null, false)
             }
           }

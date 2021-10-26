@@ -8,7 +8,7 @@ function requireUncached(module) {
 }
 
 const excelbuilder = requireUncached('..');
-var OUTFILE = './lab/print/print.xlsx';
+var OUTFILE = './test/out/print.xlsx';
 var TESTFILE = './test/files/print.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 

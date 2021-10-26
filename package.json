@@ -24,7 +24,7 @@
   "dependencies": {
     "async": "~0.2.6",
     "jszip": "^3.1.2",
-    "xmlbuilder": ">=0.4.2"
+    "xmlbuilder": ">=0.3.8"
   },
   "devDependencies": {
     "jquery": "^3.5.1",

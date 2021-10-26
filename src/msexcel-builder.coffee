@@ -326,6 +326,10 @@ class ContentTypes
       ContentType: 'application/vnd.openxmlformats-officedocument.theme+xml'
     })
     types.ele('Override', {
+      PartName: '/xl/calcChain.xml',
+      ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
+    });
+    types.ele('Override', {
       PartName: '/xl/styles.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml'
     })
@@ -344,11 +348,11 @@ class ContentTypes
       ContentType: 'application/vnd.openxmlformats-officedocument.extended-properties+xml'
     })
 
-    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
-      types.ele('Override', {
-        PartName: '/xl/calcChain.xml',
-        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
-      });
+#    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
+#      types.ele('Override', {
+#        PartName: '/xl/calcChain.xml',
+#        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
+#      });
 
     # for knowImageType in @_getKnowImageTypes
     # 	types.ele('Default', knowImageType)
@@ -357,7 +361,7 @@ class ContentTypes
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml'
     })
 
-    return types.end({pretty: true})
+    return types.end({pretty: false})
 
 class DocPropsApp
   constructor: (@book)->
@@ -380,7 +384,7 @@ class DocPropsApp
     props.ele('SharedDoc', 'false')
     props.ele('HyperlinksChanged', 'false')
     props.ele('AppVersion', '12.0000')
-    return props.end({pretty: true})
+    return props.end({pretty: false})
 
 class XlWorkbook
   constructor: (@book)->
@@ -436,7 +440,7 @@ class XlWorkbook
     wb.ele('calcPr', {calcId: '124519'})
 
 
-    return wb.end({pretty: true})
+    return wb.end({pretty: false})
 
 class XlWorkbookRels
   constructor: (@book)->
@@ -465,13 +469,19 @@ class XlWorkbookRels
       Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings',
       Target: 'sharedStrings.xml'
     })
+    rs.ele('Relationship', {
+      Id: 'rId' + (this.book.sheets.length + 4),
+      Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain',
+      Target: 'calcChain.xml'
+    });
+    return rs.end()
     if Object.getOwnPropertyNames(@book.cc.cache).length > 0
       rs.ele('Relationship', {
         Id: 'rId' + (this.book.sheets.length + 4),
         Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain',
         Target: 'calcChain.xml'
       });
-    return rs.end({pretty: true})
+    return rs.end({pretty: false})
 
 class XlWorksheetRels
   constructor: (@wsRels) ->
@@ -486,7 +496,7 @@ class XlWorksheetRels
         Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
         Target: wsRel.target
       })
-    rs.end({pretty: true})
+    rs.end({pretty: false})
 
 class XlDrawingRels
   constructor: (@dwRels) ->
@@ -502,7 +512,7 @@ class XlDrawingRels
         Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
         Target: dwRel.target
       })
-    rs.end({pretty: true})
+    rs.end({pretty: false})
 
 class SharedStrings
   constructor: ()->
@@ -527,7 +537,7 @@ class SharedStrings
       si = sst.ele('si')
       si.ele('t', @arr[i])
       si.ele('phoneticPr', {fontId: 1, type: 'noConversion'})
-    return sst.end({pretty: true})
+    return sst.end({pretty: false})
 
 class Anchor
   constructor: (@worksheet, address, offset) ->
@@ -625,46 +635,6 @@ class Anchor
     wb.ele('bookViews').ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
 
 
-class Image
-  # constructor: (@content, @contentType)
-  constructor: (@worksheet, @model) ->
-
-  @property 'model', {
-    get: () ->
-      switch (@type)
-        when 'background' then return {type: @type, imageId: @imageId}
-        when 'image' then return{
-          type: @type,
-          imageId: @imageId,
-          hyperlinks: @range.hyperlinks,
-          range: {
-            tl: @range.tl.model,
-            br: @range.br && @range.br.model,
-            ext: @range.ext,
-            editAs: @range.editAs,
-          }
-        }
-        else throw new Error('Invalid Image Type')
-      set: (model) ->
-        @type = model.type;
-        @imageId = model.imageId;
-
-        if model.type == 'image'
-          if typeof model.range == 'string'
-            decoded = colCache.decode(model.range)
-            @range = {
-              tl: new Anchor(@worksheet, {col: decoded.left, row: decoded.top}, -1),
-              br: new Anchor(@worksheet, {col: decoded.right, row: decoded.bottom}, 0),
-              editAs: 'oneCell',
-            }
-          else @range = {
-            tl: new Anchor(@worksheet, model.range.tl, 0),
-            br: model.range.br && new Anchor(@worksheet, model.range.br, 0),
-            ext: model.range.ext,
-            editAs: model.range.editAs,
-            hyperlinks: model.hyperlinks || model.range.hyperlinks,
-          }
-  }
 
 class Sheet
   constructor: (@book, @name, @cols, @rows) ->
@@ -704,10 +674,8 @@ class Sheet
       editAs: 'oneCell',
     }
 
-    ## tries to uncompress base64
-
     id = @book.medias.length + 1
-    imageToAdd = new Image(id, image.extension, image.base64, @range)
+    imageToAdd = new Image(id, image.extension, image.base64, @range, image.options||{})
     media = @book._addMediaFromImage(imageToAdd)
     # drawingId = @book._addDrawingFromImage(imageToAdd)
     # wsDwRelId = @sheet._addDrawingFromImage(imageToAdd)
@@ -900,13 +868,13 @@ class Sheet
     ws = xml.create('worksheet', {version: '1.0', encoding: 'UTF-8', standalone: true})
     ws.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     ws.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
-    ws.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
+#    ws.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
 
-    ws.att('mc:Ignorable', "x14ac xr xr2 xr3")
-    ws.att('xmlns:x14ac', "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac")
-    ws.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
-    ws.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
-    ws.att('xmlns:xr3', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3")
+#    ws.att('mc:Ignorable', "x14ac xr xr2 xr3")
+#    ws.att('xmlns:x14ac', "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac")
+#    ws.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
+#    ws.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
+#    ws.att('xmlns:xr3', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3")
 
     ws.ele('dimension', {ref: 'A1'})
 
@@ -940,6 +908,8 @@ class Sheet
           else if ix.dataType == 'number'
             c.ele 'v', '' + ix.v
 
+
+
     if @merges.length > 0
       mc = ws.ele('mergeCells', {count: @merges.length})
       for m in @merges
@@ -964,7 +934,7 @@ class Sheet
     for wsRel in @wsRels
       ws.ele('drawing', {'r:id': wsRel.id})
 
-    ws.end({pretty: true})
+    ws.end({pretty: false})
 
 class CalcChain
 
@@ -985,7 +955,28 @@ class CalcChain
       for el in val
         cc.ele('c', {r: '' + el, i: '' + key})
 
-    return cc.end({pretty: true})
+    return cc.end({pretty: false})
+
+class CalcChain
+
+  constructor: (@book)->
+    @cache = {}
+
+  add_ref: (idx, col, row)->
+    num = idx + 1
+    if !@cache.hasOwnProperty(num)
+      @cache[num] = []
+    @cache[num].push(tool.i2a(col) + row)
+
+  toxml: ()->
+    cc = xml.create('calcChain', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    cc.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+
+    for key, val of @cache
+      for el in val
+        cc.ele('c', { r: '' + el, i: '' + key })
+
+    return cc.end()
 
 class Style
 
@@ -1245,27 +1236,27 @@ class Style
     ss.ele('cellStyles', {count: '1'}).ele('cellStyle', {name: 'Normal', xfId: '0', builtinId: '0'})
     ss.ele('dxfs', {count: '0'})
     ss.ele('tableStyles', {count: '0', defaultTableStyle: 'TableStyleMedium9', defaultPivotStyle: 'PivotStyleLight16'})
-    return ss.end({pretty: true})
+    return ss.end({pretty: false})
 
 class Image
-  constructor: (@id, @extension, @content, @range) ->
+  constructor: (@id, @extension, @content, @range, @options) ->
     @editAs = 'oneCell'
 
 
   publish: (sheet, zip, media)->
-## Inject image, it's used by sheet
-## 1. write data to media folder
-##    convert base 64 to text
-##    define filename based on number of existing medias
-##    writes to media
-##
-## 2. create reference for media to drawing
-## 3. create the actual drawing using reference for media and set location
-## 4. creates reference for drawing to sheet.
-## 5. use image rel to sheet.
+    ## Inject image, it's used by sheet
+    ## 1. write data to media folder
+    ##    convert base 64 to text
+    ##    define filename based on number of existing medias
+    ##    writes to media
+    ##
+    ## 2. create reference for media to drawing
+    ## 3. create the actual drawing using reference for media and set location
+    ## 4. creates reference for drawing to sheet.
+    ## 5. use image rel to sheet.
 
-  toDrawingXml: (svgVersionRel)->
-    pngVersionRel = 'rId1'
+  toDrawingXml: (relId,spec)->
+    # pngVersionRel = 'rId1'
     # svgVersionRel = 'rId2'
 
     dr = xml.create('xdr:wsDr', {version: '1.0', encoding: 'UTF-8', standalone: true})
@@ -1310,8 +1301,8 @@ class Image
       'xmlns:r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
     }
 
-    if (pngVersionRel)
-      blipModel["r:embed"]=pngVersionRel
+    if (relId)
+      blipModel["r:embed"]=relId
 
     blipModel['cstate'] = "print"
     blip = blipFill.ele('a:blip', blipModel)
@@ -1324,17 +1315,18 @@ class Image
     , 'val': 0
     })
 
-    #		if !!svgVersionRel
-    #			ext = extLst.ele('a:ext', {
-    #				'uri': '{96DAC541-7B7A-43D3-8B79-37D633B846F1}'
-    #			})
-    #			ext.ele('asvg:svgBlip', {
-    #				'xmlns:asvg':'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
-    #				, 'r:embed': svgVersionRel
-    #			})
+    if @extension =='svg'
+      ext = extLst.ele('a:ext', {
+        'uri': '{96DAC541-7B7A-43D3-8B79-37D633B846F1}'
+      })
+      ext.ele('asvg:svgBlip', {
+        'xmlns:asvg':'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
+        , 'r:embed': relId
+      })
 
 
-    blipFill.ele('a:stretch')
+    if @options.stretch
+      blipFill.ele('a:stretch')
     blipFill.ele('srcRect')
     #.ele('a:fillRect')
     spPr = pic.ele('xdr:spPr')
@@ -1342,9 +1334,8 @@ class Image
     xfrm.ele('a:off', {'x': 609600, 'y': 190500})
     xfrm.ele('a:ext', {'cx': 2857500, 'cy': 2857500})
     spPr.ele('a:prstGeom', {'prst': 'rect'}).ele('a:avLst')
-
     twoCellAnchor.ele('xdr:clientData')
-    dr.end({pretty: true})
+    dr.end({pretty: false})
 
 class Workbook
   constructor: (@fpath, @fname) ->
@@ -1359,6 +1350,7 @@ class Workbook
     @wb = new XlWorkbook(@)
     @wbre = new XlWorkbookRels(@)
     @st = new Style(@)
+    @cc = new CalcChain(@)
     @cc = new CalcChain(@)
 # @wsre = new XlSheetRels(@)
 # @dw = new XlDrawing(@)
@@ -1447,7 +1439,7 @@ class Workbook
         # - build xl/drawings/drawing(1-N).xml
         drawingFilename = wbMediaCounter + '.xml'
         sheet.wsRels.push({id: relId, target: '../drawings/drawing' + drawingFilename})
-        zip.file('xl/drawings/drawing' + drawingFilename, image.toDrawingXml(relId))
+        zip.file('xl/drawings/drawing' + drawingFilename, image.toDrawingXml(relId, image))
 
         # - build xl/drawings/_rels/drawing(1-N).xml.rels
         zip.file('xl/drawings/_rels/drawing' + wbMediaCounter + '.xml.rels', new XlDrawingRels(dwRels).toxml())
@@ -1461,7 +1453,6 @@ class Workbook
       zip.file('xl/worksheets/sheet' + (i + 1) + '.xml', @sheets[i].toxml())
     # 7 - build xl/styles.xml
     zip.file('xl/styles.xml', @st.toxml())
-
     # 8 - build xl/calcChain.xml
     if Object.getOwnPropertyNames(@cc.cache).length > 0
       zip.file('xl/calcChain.xml', @cc.toxml())
