@@ -266,6 +266,28 @@ then the method will be called with that argument, e.g.
     })
 ```    
 
+You can also set multiple cells in a Worksheet by passing a nested object or array of arrays
+where the first layer is the columns, the next layer is the rows, and the third layer is the cells: 
+```js
+sheet.set({
+      "2": {
+        "4":{ set: "Cell B4", font: { bold: true, size: 14, color: "44FF22"}}
+      }
+    })
+```
+
+It's also possible to set data as an array of arrays.  
+Just note that Javascript array indexed start at zero while Excel column/rows start at one.
+So the first item in each array, at index zero, is ignored.
+
+```js
+sheet1.set([
+    null,          // column 0 is ignored
+    null,          // column 1 "A"
+    null,          // column 2 "B"
+    [null, "C1"]   // column 3 "C"
+])
+```
 ### Sheet.formula(col, row, str) 
 Create a cell formula
 ```
@@ -525,6 +547,12 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.4.1
+* Extend Sheet.set() to set multiple rows/columns/cells at once as a dense array of arrays or a nested sparse object.
+
+v0.4.0
+* Add images 
 
 v0.3.10
 * Add `Sheet.form(ncols, nrows)`

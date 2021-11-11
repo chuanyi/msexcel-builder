@@ -679,6 +679,7 @@ class Sheet
     media = @book._addMediaFromImage(imageToAdd)
     # drawingId = @book._addDrawingFromImage(imageToAdd)
     # wsDwRelId = @sheet._addDrawingFromImage(imageToAdd)
+    console.log(imageToAdd)
     @images.push(imageToAdd)
 
     return id
@@ -711,7 +712,14 @@ class Sheet
   ###
 
   set: (col, row, str) ->
-    if str instanceof Date
+    if (arguments.length==1 && col && typeof col == 'object')
+      cells = col
+      for c,col of cells
+        for r,cell of col
+          this.set(c,r, cell)
+
+
+    else if str instanceof Date
       @set col, row, JSDateToExcel str
       # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
       @fill col, row,
@@ -731,6 +739,8 @@ class Sheet
     else
       @data[row][col].v = str
     return
+
+
 
   formula: (col, row, str) ->
     if (typeof str == 'string')
