@@ -1113,11 +1113,11 @@ class Style
       # if it's not in numberFormats, we parse the string and add it the end of numberFormats
       if !numfmt
         throw "Invalid format specification"
-      numfmt = numfmt
-        .replace(/&/g, '&amp')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+#      numfmt = numfmt
+#        .replace(/&/g, '&amp')
+#        .replace(/</g, '&lt;')
+#        .replace(/>/g, '&gt;')
+#        .replace(/"/g, '&quot;')
       @numberFormats[++@numFmtNextId] = numfmt
       return @numFmtNextId
 

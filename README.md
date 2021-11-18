@@ -394,15 +394,22 @@ sheet1.border(1, 1, {
 ```
 
 #### Sheet.numberFormat(col, row, numfmt)
-Specify a number format by string or index. Currently only Excel's built-in number formats are handled.
+Specify a number format by string or index.  You can now add custom number formats as well:
+
+
 
 Example:
 ```javascript
 sheet1.numberFormat(2,2, '0.00%');
-sheet1.numberFormat(2,2, 10); // equivalent to above
+sheet1.numberFormat(2,3, 10); // equivalent to above
+sheet1.numberFormat(2,4, "$#,###.00"); // equivalent to above
+sheet1.numberFormat(2,5, '" ABCDE "0.0%;" ABCDE "-0.0%;" ABCDE "—;@'); // not that you would but you could
+
 ```
 
-```javascript
+The following number formats are built in, inherited from the original project.
+
+```js
       0: 'General',
       1: '0',
       2: '0.00',
@@ -547,6 +554,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.4.2
+* Extend to allow custom number formats per 
 
 v0.4.1
 * Extend Sheet.set() to set multiple rows/columns/cells at once as a dense array of arrays or a nested sparse object.
