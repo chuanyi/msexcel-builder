@@ -74,7 +74,7 @@ Further you can optionally compress the saved file:
    workbook.save("/tmp/workbook.xlsx", {compressed: true}, function(err) {
       if (err) throw err;
       console.log("open \"" + path + "\"");
-   });
+   });w
 ```
 
 ## Use in browser
@@ -539,6 +539,12 @@ Add an image (currently only PNG supported, SVG in the works...)
       options: {stretch: true}
     })
 
+### Sheet.note(col, row, text) 
+
+Add a note to a cell
+    
+    sheet.note(3, 3, 'Check this out')
+
 ## Testing
 
 There is a nascent Mocha test suite.
@@ -554,6 +560,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.4.3
+* Allow notes
 
 v0.4.2
 * Extend to allow custom number formats per 

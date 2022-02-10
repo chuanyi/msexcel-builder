@@ -9,7 +9,7 @@ function requireUncached(module) {
 
 const excelbuilder = requireUncached('..');
 var OUTFILE = './test/out/image-png.xlsx';
-var OUTFILE = './lab/image/image-png.xlsx';
+// var OUTFILE = './lab/image/image-png.xlsx';
 var TESTFILE = './test/files/image-png.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 

@@ -24,10 +24,6 @@ if (window? && window.xmlbuilder?)
 else if (typeof require != 'undefined')
   fs = require 'fs'
 
-####tool =
-#  i2a : (i) ->
-#    return 'ABCDEFGHIJKLMNOPQ###RSTUVWXYZ123'.charAt(i-1)
-
 tool =
   i2a: (column) ->
     temp = undefined
@@ -37,6 +33,10 @@ tool =
       letter = String.fromCharCode(temp + 65) + letter
       column = (column - temp - 1) / 26
     return letter
+
+  cell: (col,row) ->
+    @i2a(col)+row
+
 
 ImageType =
   SVG: "image/svg+xml"
@@ -310,6 +310,8 @@ class ContentTypes
     types.ele('Default', {Extension: 'svg', ContentType: 'image/svg+xml'})
     types.ele('Default', {Extension: 'rels', ContentType: 'application/vnd.openxmlformats-package.relationships+xml'})
     types.ele('Default', {Extension: 'xml', ContentType: 'application/xml'})
+    types.ele('Default', {Extension: 'vml', ContentType: 'application/vnd.openxmlformats-officedocument.vmlDrawing'})
+
 
     types.ele('Override', {
       PartName: '/xl/workbook.xml',
@@ -319,6 +321,11 @@ class ContentTypes
       types.ele('Override', {
         PartName: '/xl/worksheets/sheet' + i + '.xml',
         ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'
+      })
+
+      types.ele('Override', {
+        PartName: '/xl/comments' + i + '.xml',
+        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml'
       })
 
     types.ele('Override', {
@@ -333,6 +340,8 @@ class ContentTypes
       PartName: '/xl/styles.xml',
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml'
     })
+
+
     for sheet in @book.sheets
       for image in sheet.images
         types.ele('Override', {
@@ -493,10 +502,92 @@ class XlWorksheetRels
     for wsRel in @wsRels
       rs.ele('Relationship', {
         Id: wsRel.id,
-        Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
+        Type: wsRel.type,
         Target: wsRel.target
       })
     rs.end({pretty: false})
+
+class WorksheetComments
+
+  constructor: (@comments) ->
+  generate: () ->
+  toxml: () ->
+    rs = xml.create('comments', {version: '1.0', encoding: 'UTF-8', standalone: true})
+    rs.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+    rs.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
+    rs.att('mc:Ignorable', 'xr')
+    rs.att('xmlns:xr', 'http://schemas.microsoft.com/office/spreadsheetml/2014/revision')
+
+    rs.ele('authors')
+      .ele('author', 'Author')
+
+
+
+    commentList = rs.ele('commentList')
+    for col, entry of @comments
+      for row, note of entry
+        cellRef = tool.cell(col,row)
+        comment =  commentList.ele('comment')
+          .att('ref', cellRef)
+          .att('authorId', '0')
+          .att('shapeId','0')
+          #.att('xr:uid',"{829DBC4F-C43E-6E4C-8E0D-8084705EA64B}")
+
+        text = comment.ele('text')
+        run = text.ele('r')
+        run.ele('rPr')
+        run.ele('t', note)
+
+    rs.end({pretty: false})
+
+
+class WorksheetCommentsDrawings
+
+  constructor: (@notes) ->
+  generate: () ->
+  toxml: () ->
+    rs = xml.create('xml')
+    rs.att('xmlns:v', "urn:schemas-microsoft-com:vml")
+    rs.att('xlmns:o', "urn:schemas-microsoft-com:office:office")
+    rs.att('xmlns:x', "urn:schemas-microsoft-com:office:excel")
+
+    rs.ele('o:shapelayout').att('v:ext','edit')
+      .ele('o:idmap').att('v:ext','edit').att('data','2')
+
+    rs.ele('v:shapetype').att()
+
+    for col, entry of @notes
+      for row, note of entry
+        cellRef = tool.cell(col, row)
+
+        shape = rs.ele('v:shape', {
+          "id": cellRef,
+          "type": "#_x0000_t202",
+          "style": 'visibility:hidden',
+          "fillcolor": "#3399CC [80]",
+          "strokecolor": "#217346",
+          "o:insetmode": "auto"
+        })
+        shape.ele('v:fill').att("color2","#DDEEFF [80]")
+        shape.ele('v:shadow')
+          .att("color","none")
+          .att("obscured","t")
+        shape.ele('v:path').att('o:connecttype','none')
+
+        shape.ele("v:textbox")
+          .att("style","mso-direction-alt:auto")
+          .ele("div").att('style','text-align: left')
+
+        cd = shape.ele('x:ClientData').att('ObjectType','Note')
+        cd.ele('x:MoveWithCells')
+        cd.ele('x:SizeWithCells')
+        cd.ele('x:Anchor', '\n2, 15, 0, 5, 4, 13, 4, 14\n')
+        cd.ele('x:AutoFill','False')
+        cd.ele('x:Row',row-1)
+        cd.ele('x:Column',col-1)
+
+    rs.end({pretty: false})
+
 
 class XlDrawingRels
   constructor: (@dwRels) ->
@@ -508,7 +599,6 @@ class XlDrawingRels
     for dwRel in @dwRels
       rs.ele('Relationship', {
         Id: dwRel.id,
-# Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
         Type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
         Target: dwRel.target
       })
@@ -679,7 +769,6 @@ class Sheet
     media = @book._addMediaFromImage(imageToAdd)
     # drawingId = @book._addDrawingFromImage(imageToAdd)
     # wsDwRelId = @sheet._addDrawingFromImage(imageToAdd)
-    console.log(imageToAdd)
     @images.push(imageToAdd)
 
     return id
@@ -711,6 +800,7 @@ class Sheet
       return image && image.imageId
   ###
 
+
   set: (col, row, str) ->
     if (arguments.length==1 && col && typeof col == 'object')
       cells = col
@@ -740,8 +830,6 @@ class Sheet
       @data[row][col].v = str
     return
 
-
-
   formula: (col, row, str) ->
     if (typeof str == 'string')
       @formulas = @formulas || []
@@ -749,6 +837,11 @@ class Sheet
       sheet_idx = i for sheet, i in @book.sheets when sheet.name == @name
       @book.cc.add_ref(sheet_idx, col, row)
       @formulas[row][col] = str
+
+  note: (col, row, note) ->
+    @notes = @notes || {}
+    @notes[col] = @notes[col] || {}
+    @notes[col][row] = note
 
   merge: (from_cell, to_cell) ->
     @merges.push({from: from_cell, to: to_cell})
@@ -788,6 +881,7 @@ class Sheet
 
   wrap: (col, row, wrap_s)->
     @styles['wrap_' + col + '_' + row] = wrap_s
+
 
   autoFilter: (filter_s) ->
     @autofilter = if typeof filter_s == 'string' then filter_s else @getRange()
@@ -874,6 +968,7 @@ class Sheet
   getRange: () ->
     return '$A$1:$' + tool.i2a(@cols) + '$' + @rows
 
+
   toxml: () ->
     ws = xml.create('worksheet', {version: '1.0', encoding: 'UTF-8', standalone: true})
     ws.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
@@ -942,7 +1037,12 @@ class Sheet
         cb.ele('brk', { id: i, man: '1'})
 
     for wsRel in @wsRels
-      ws.ele('drawing', {'r:id': wsRel.id})
+      if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing')
+        ws.ele('legacyDrawing', {'r:id': wsRel.id})
+
+
+
+
 
     ws.end({pretty: false})
 
@@ -1435,6 +1535,29 @@ class Workbook
 
     for sheet, i in @sheets
       sheet.wsRels = []
+      sheet.wsComments = {}
+
+      if sheet.notes
+
+        relId = 'rId' + (sheet.wsRels.length + 1)
+        drawingFilename = '../drawings/vmlDrawing' + (i+1) + '.vml'
+        sheet.wsRels.push({
+          id: relId,
+          target: drawingFilename,
+          type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing'
+        })
+
+        relId = 'rId' + (sheet.wsRels.length + 1)
+        sheet.wsRels.push({
+          id: relId,
+          target: '../comments' + (i+1) + '.xml',
+          type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments'
+        })
+
+        zip.file('xl/drawings/vmlDrawing' + (i+1) + '.vml',  new WorksheetCommentsDrawings(sheet.notes).toxml())
+
+
+      # <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="../comments2.xml"/>
 
       for image, j in sheet.images
 
@@ -1448,7 +1571,7 @@ class Workbook
 
         # - build xl/drawings/drawing(1-N).xml
         drawingFilename = wbMediaCounter + '.xml'
-        sheet.wsRels.push({id: relId, target: '../drawings/drawing' + drawingFilename})
+        sheet.wsRels.push({id: relId, target: '../drawings/drawing' + drawingFilename, type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'})
         zip.file('xl/drawings/drawing' + drawingFilename, image.toDrawingXml(relId, image))
 
         # - build xl/drawings/_rels/drawing(1-N).xml.rels
@@ -1459,13 +1582,19 @@ class Workbook
       # - build xl/worksheets/_rels/sheet(1-N).xml.rels
       zip.file('xl/worksheets/_rels/sheet' + (i + 1) + '.xml.rels', new XlWorksheetRels(sheet.wsRels).toxml())
 
+      if (sheet.notes)
+        zip.file('xl/comments' + (i+1) + '.xml', new WorksheetComments(sheet.notes).toxml())
+
       # - build xl/worksheets/sheet(1-N).xml
       zip.file('xl/worksheets/sheet' + (i + 1) + '.xml', @sheets[i].toxml())
+
     # 7 - build xl/styles.xml
     zip.file('xl/styles.xml', @st.toxml())
+
     # 8 - build xl/calcChain.xml
     if Object.getOwnPropertyNames(@cc.cache).length > 0
       zip.file('xl/calcChain.xml', @cc.toxml())
+
     # 9 - build xl/worksheets/sheet(1-N).xml
 
     cb(null, zip)
