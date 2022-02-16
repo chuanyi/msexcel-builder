@@ -545,6 +545,24 @@ Add a note to a cell
     
     sheet.note(3, 3, 'Check this out')
 
+
+Add a note with multiple lines:
+  
+    sheet.note(3,4, [
+      "Twas 'brillig and the slithy tove",
+      "Did gyre and gimble in the wabe"
+    ]
+
+Add a note with one (or more) lines formatted:
+
+    sheet.note(3,4, [
+      "Twas 'brillig and the slithy tove",
+      "Did gyre and gimble in the wabe",
+      {"text": "All mimsy were the borogroves", { "bold": true, "fontSize": 14, "fontFamily": "Courier"}}
+      "And the mome raths outgrabe"
+    ]
+
+
 ## Testing
 
 There is a nascent Mocha test suite.

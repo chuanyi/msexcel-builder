@@ -25,7 +25,7 @@ describe('It generates a simple workbook', function () {
       for (var j = 0; j < letters.length; j++) {
         var str = letters[i] + letters[j]
         //var fmt = `"${str}" 0.0%;"${str}" -0.0%;"${str}" –`
-        var fmt = `"${str}" 0.0%`
+        var fmt = `[Blue]"(${count})" 0.0%`
 
         fmt = (count++ < 206) ? fmt : null
 

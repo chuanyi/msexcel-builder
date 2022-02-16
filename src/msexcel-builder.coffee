@@ -34,8 +34,8 @@ tool =
       column = (column - temp - 1) / 26
     return letter
 
-  cell: (col,row) ->
-    @i2a(col)+row
+  cell: (col, row) ->
+    @i2a(col) + row
 
 
 ImageType =
@@ -357,11 +357,11 @@ class ContentTypes
       ContentType: 'application/vnd.openxmlformats-officedocument.extended-properties+xml'
     })
 
-#    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
-#      types.ele('Override', {
-#        PartName: '/xl/calcChain.xml',
-#        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
-#      });
+    #    if Object.getOwnPropertyNames(@book.cc.cache).length > 0
+    #      types.ele('Override', {
+    #        PartName: '/xl/calcChain.xml',
+    #        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml'
+    #      });
 
     # for knowImageType in @_getKnowImageTypes
     # 	types.ele('Default', knowImageType)
@@ -399,7 +399,6 @@ class XlWorkbook
   constructor: (@book)->
 
   toxml: ()->
-
     wb = xml.create('workbook', {version: '1.0', encoding: 'UTF-8', standalone: true})
     wb.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     wb.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
@@ -434,16 +433,15 @@ class XlWorkbook
       if (sheet._repeatRows || sheet._repeatCols)
         range = ''
         if (sheet._repeatCols)
-          range += "'" + sheet.name + "'!$" + tool.i2a(sheet._repeatCols.start) + ":$"+tool.i2a(sheet._repeatCols.end)
+          range += "'" + sheet.name + "'!$" + tool.i2a(sheet._repeatCols.start) + ":$" + tool.i2a(sheet._repeatCols.end)
         if (sheet._repeatRows)
-          range += ",'" + sheet.name + "'!$" + (sheet._repeatRows.start) + ":$"+(sheet._repeatRows.end)
+          range += ",'" + sheet.name + "'!$" + (sheet._repeatRows.start) + ":$" + (sheet._repeatRows.end)
 
         definedNames.ele('definedName', {
           name: "_xlnm.Print_Titles"
           localSheetId: idx
         }).raw(range)
     )
-
 
 
     wb.ele('calcPr', {calcId: '124519'})
@@ -522,21 +520,36 @@ class WorksheetComments
       .ele('author', 'Author')
 
 
-
     commentList = rs.ele('commentList')
     for col, entry of @comments
       for row, note of entry
-        cellRef = tool.cell(col,row)
-        comment =  commentList.ele('comment')
+        cellRef = tool.cell(col, row)
+        comment = commentList.ele('comment')
           .att('ref', cellRef)
           .att('authorId', '0')
-          .att('shapeId','0')
-          #.att('xr:uid',"{829DBC4F-C43E-6E4C-8E0D-8084705EA64B}")
+          .att('shapeId', '0')
+        #.att('xr:uid',"{829DBC4F-C43E-6E4C-8E0D-8084705EA64B}")
 
         text = comment.ele('text')
-        run = text.ele('r')
-        run.ele('rPr')
-        run.ele('t', note)
+
+        if (note && !Array.isArray(note))
+          note = [note]
+
+        for n,i in note
+
+          nstr = if (n && typeof n == 'string') then n else n.text
+          props = if ( n && typeof n == 'string') then null else n.props
+          run = text.ele('r')
+          rPr = run.ele('rPr')
+          if (props)
+            if (props.bold)
+              rPr.ele('b')
+            if (props.fontSize)
+              rPr.ele('sz').att('va',props.fontSize)
+            if (props.fontFamily)
+              rPr.ele('rFont').att('va',props.fontFamily)
+
+          run.ele('t', nstr + '\n').att('xml:space', 'preserve')
 
     rs.end({pretty: false})
 
@@ -551,40 +564,50 @@ class WorksheetCommentsDrawings
     rs.att('xlmns:o', "urn:schemas-microsoft-com:office:office")
     rs.att('xmlns:x', "urn:schemas-microsoft-com:office:excel")
 
-    rs.ele('o:shapelayout').att('v:ext','edit')
-      .ele('o:idmap').att('v:ext','edit').att('data','2')
+    rs.ele('o:shapelayout').att('v:ext', 'edit')
+      .ele('o:idmap').att('v:ext', 'edit').att('data', '2')
 
-    rs.ele('v:shapetype').att()
+    rs.ele('v:shapetype')
 
     for col, entry of @notes
       for row, note of entry
+
         cellRef = tool.cell(col, row)
+        padding = 5;
+
+        num_rows = 5
+        num_cols = 4
+        if Array.isArray(note)
+          num_lines = note.length + 1
+
+
+        anchors = [+col, padding, +row - 1, padding, +col + num_cols, padding, +row + num_rows + 1, padding]
 
         shape = rs.ele('v:shape', {
           "id": cellRef,
           "type": "#_x0000_t202",
           "style": 'visibility:hidden',
-          "fillcolor": "#3399CC [80]",
-          "strokecolor": "#217346",
+          "fillcolor": "#EEEEEE [80]",
+          "strokecolor": "#3399CC",
           "o:insetmode": "auto"
         })
-        shape.ele('v:fill').att("color2","#DDEEFF [80]")
+        shape.ele('v:fill').att("color2", "#EEEEEE [80]")
         shape.ele('v:shadow')
-          .att("color","none")
-          .att("obscured","t")
-        shape.ele('v:path').att('o:connecttype','none')
+          .att("color", "none")
+          .att("obscured", "t")
+        shape.ele('v:path').att('o:connecttype', 'none')
 
         shape.ele("v:textbox")
-          .att("style","mso-direction-alt:auto")
-          .ele("div").att('style','text-align: left')
+          .att("style", "mso-direction-alt:auto")
+          .ele("div").att('style', 'text-align: left')
 
-        cd = shape.ele('x:ClientData').att('ObjectType','Note')
+        cd = shape.ele('x:ClientData').att('ObjectType', 'Note')
         cd.ele('x:MoveWithCells')
         cd.ele('x:SizeWithCells')
-        cd.ele('x:Anchor', '\n2, 15, 0, 5, 4, 13, 4, 14\n')
-        cd.ele('x:AutoFill','False')
-        cd.ele('x:Row',row-1)
-        cd.ele('x:Column',col-1)
+        cd.ele('x:Anchor', '\n' + anchors.join(',') + '\n')
+        cd.ele('x:AutoFill', 'False')
+        cd.ele('x:Row', row - 1)
+        cd.ele('x:Column', col - 1)
 
     rs.end({pretty: false})
 
@@ -725,7 +748,6 @@ class Anchor
     wb.ele('bookViews').ele('workbookView', {xWindow: '0', yWindow: '90', windowWidth: '19200', windowHeight: '11640'})
 
 
-
 class Sheet
   constructor: (@book, @name, @cols, @rows) ->
     @name = @name.replace(/[/*:?\[\]]/g, '-')
@@ -739,8 +761,8 @@ class Sheet
     @col_wd = []
     @row_ht = {}
     @styles = {}
-    @formulas=[]
-    @_pageMargins= {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
+    @formulas = []
+    @_pageMargins = {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
     @images = []
 
 # validates exclusivity between filling base64, filename, buffer properties.
@@ -765,7 +787,7 @@ class Sheet
     }
 
     id = @book.medias.length + 1
-    imageToAdd = new Image(id, image.extension, image.base64, @range, image.options||{})
+    imageToAdd = new Image(id, image.extension, image.base64, @range, image.options || {})
     media = @book._addMediaFromImage(imageToAdd)
     # drawingId = @book._addDrawingFromImage(imageToAdd)
     # wsDwRelId = @sheet._addDrawingFromImage(imageToAdd)
@@ -802,11 +824,11 @@ class Sheet
 
 
   set: (col, row, str) ->
-    if (arguments.length==1 && col && typeof col == 'object')
+    if (arguments.length == 1 && col && typeof col == 'object')
       cells = col
       for c,col of cells
         for r,cell of col
-          this.set(c,r, cell)
+          this.set(c, r, cell)
 
 
     else if str instanceof Date
@@ -816,9 +838,11 @@ class Sheet
         type: "solid",
         fgColor: "FFFFFF"
       @numberFormat col, row, 'd-mmm'
-    else if typeof str == 'object'
+    else if typeof str == 'object' && !Array.isArray(str)
       for key of str
-        @[key] col, row, str[key]
+        if typeof @[key] == 'function'
+          @[key] col, row, str[key]
+        else console.error('Ignoring ', key, col, row, str[key])
     else if  typeof str == 'string'
       if str != null and str != ''
         @data[row][col].v = @book.ss.str2id('' + str)
@@ -839,9 +863,11 @@ class Sheet
       @formulas[row][col] = str
 
   note: (col, row, note) ->
-    @notes = @notes || {}
-    @notes[col] = @notes[col] || {}
-    @notes[col][row] = note
+    if (note && ((typeof note == 'string') || ((typeof note == 'object') && (note.length || note.text)) ))
+      console.log("note",col, row, note)
+      @notes = @notes || {}
+      @notes[col] = @notes[col] || {}
+      @notes[col][row] = note
 
   merge: (from_cell, to_cell) ->
     @merges.push({from: from_cell, to: to_cell})
@@ -899,7 +925,7 @@ class Sheet
     orientation: 'portrait',
     horizontalDpi: '200',
     verticalDpi: '200'
-    }
+  }
 
   sheetViews: (obj) ->
     for key, val of obj
@@ -939,7 +965,7 @@ class Sheet
   printRepeatColumns: (start, end) ->
     if Array.isArray(start)
       @_repeatCols = {start: start[0], end: start[1]}
-    else @_repeatCols =  {start, end}
+    else @_repeatCols = {start, end}
 
   pageSetup: (obj) ->
     for key, val of obj
@@ -973,13 +999,13 @@ class Sheet
     ws = xml.create('worksheet', {version: '1.0', encoding: 'UTF-8', standalone: true})
     ws.att('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main')
     ws.att('xmlns:r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships')
-#    ws.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
+    #    ws.att('xmlns:mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
 
-#    ws.att('mc:Ignorable', "x14ac xr xr2 xr3")
-#    ws.att('xmlns:x14ac', "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac")
-#    ws.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
-#    ws.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
-#    ws.att('xmlns:xr3', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3")
+    #    ws.att('mc:Ignorable', "x14ac xr xr2 xr3")
+    #    ws.att('xmlns:x14ac', "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac")
+    #    ws.att('xmlns:xr', "http://schemas.microsoft.com/office/spreadsheetml/2014/revision")
+    #    ws.att('xmlns:xr2', "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2")
+    #    ws.att('xmlns:xr3', "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3")
 
     ws.ele('dimension', {ref: 'A1'})
 
@@ -1014,7 +1040,6 @@ class Sheet
             c.ele 'v', '' + ix.v
 
 
-
     if @merges.length > 0
       mc = ws.ele('mergeCells', {count: @merges.length})
       for m in @merges
@@ -1029,19 +1054,16 @@ class Sheet
     if @_rowBreaks && @_rowBreaks.length
       cb = ws.ele('rowBreaks', {count: @_rowBreaks.length, manualBreakCount: @_rowBreaks.length})
       for i in @_rowBreaks
-        cb.ele('brk', { id: i, man: '1'})
+        cb.ele('brk', {id: i, man: '1'})
 
     if @_colBreaks && @_colBreaks.length
       cb = ws.ele('colBreaks', {count: @_colBreaks.length, manualBreakCount: @_colBreaks.length})
       for i in @_colBreaks
-        cb.ele('brk', { id: i, man: '1'})
+        cb.ele('brk', {id: i, man: '1'})
 
     for wsRel in @wsRels
       if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing')
         ws.ele('legacyDrawing', {'r:id': wsRel.id})
-
-
-
 
 
     ws.end({pretty: false})
@@ -1084,7 +1106,7 @@ class CalcChain
 
     for key, val of @cache
       for el in val
-        cc.ele('c', { r: '' + el, i: '' + key })
+        cc.ele('c', {r: '' + el, i: '' + key})
 
     return cc.end()
 
@@ -1194,7 +1216,7 @@ class Style
     bder.right or= '-'
     bder.top or= '-'
     bder.bottom or= '-'
-    k = JSON.stringify(["bder_",bder.left,bder.right, bder.top, bder.bottom])
+    k = JSON.stringify(["bder_", bder.left, bder.right, bder.top, bder.bottom])
     id = @cache[k]
     if id
       return id
@@ -1213,11 +1235,11 @@ class Style
       # if it's not in numberFormats, we parse the string and add it the end of numberFormats
       if !numfmt
         throw "Invalid format specification"
-#      numfmt = numfmt
-#        .replace(/&/g, '&amp')
-#        .replace(/</g, '&lt;')
-#        .replace(/>/g, '&gt;')
-#        .replace(/"/g, '&quot;')
+      #      numfmt = numfmt
+      #        .replace(/&/g, '&amp')
+      #        .replace(/</g, '&lt;')
+      #        .replace(/>/g, '&gt;')
+      #        .replace(/"/g, '&quot;')
       @numberFormats[++@numFmtNextId] = numfmt
       return @numFmtNextId
 
@@ -1314,7 +1336,6 @@ class Style
       else e.ele('bottom')
 
 
-
       e.ele('diagonal')
     ss.ele('cellStyleXfs', {count: '1'}).ele('xf', {
       numFmtId: '0',
@@ -1354,21 +1375,20 @@ class Image
 
 
   publish: (sheet, zip, media)->
-    ## Inject image, it's used by sheet
-    ## 1. write data to media folder
-    ##    convert base 64 to text
-    ##    define filename based on number of existing medias
-    ##    writes to media
-    ##
-    ## 2. create reference for media to drawing
-    ## 3. create the actual drawing using reference for media and set location
-    ## 4. creates reference for drawing to sheet.
-    ## 5. use image rel to sheet.
+## Inject image, it's used by sheet
+## 1. write data to media folder
+##    convert base 64 to text
+##    define filename based on number of existing medias
+##    writes to media
+##
+## 2. create reference for media to drawing
+## 3. create the actual drawing using reference for media and set location
+## 4. creates reference for drawing to sheet.
+## 5. use image rel to sheet.
 
-  toDrawingXml: (relId,spec)->
-    # pngVersionRel = 'rId1'
-    # svgVersionRel = 'rId2'
-
+  toDrawingXml: (relId, spec)->
+# pngVersionRel = 'rId1'
+# svgVersionRel = 'rId2'
     dr = xml.create('xdr:wsDr', {version: '1.0', encoding: 'UTF-8', standalone: true})
     # dr.att('xmlns:xdr', 'http://purl.oclc.org/ooxml/drawingml/spreadsheetDrawing')
     dr.att('xmlns:xdr', 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing')
@@ -1412,7 +1432,7 @@ class Image
     }
 
     if (relId)
-      blipModel["r:embed"]=relId
+      blipModel["r:embed"] = relId
 
     blipModel['cstate'] = "print"
     blip = blipFill.ele('a:blip', blipModel)
@@ -1425,13 +1445,13 @@ class Image
     , 'val': 0
     })
 
-    if @extension =='svg'
+    if @extension == 'svg'
       ext = extLst.ele('a:ext', {
         'uri': '{96DAC541-7B7A-43D3-8B79-37D633B846F1}'
       })
       ext.ele('asvg:svgBlip', {
-        'xmlns:asvg':'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
-        , 'r:embed': relId
+        'xmlns:asvg': 'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
+      , 'r:embed': relId
       })
 
 
@@ -1497,7 +1517,7 @@ class Workbook
       cb = target
       target = @fpath + '/' + @fname
       opts = {}
-    else if (arguments.length == 2 && typeof opts =='function')
+    else if (arguments.length == 2 && typeof opts == 'function')
       cb = opts
       opts = {}
 
@@ -1540,7 +1560,7 @@ class Workbook
       if sheet.notes
 
         relId = 'rId' + (sheet.wsRels.length + 1)
-        drawingFilename = '../drawings/vmlDrawing' + (i+1) + '.vml'
+        drawingFilename = '../drawings/vmlDrawing' + (i + 1) + '.vml'
         sheet.wsRels.push({
           id: relId,
           target: drawingFilename,
@@ -1550,11 +1570,11 @@ class Workbook
         relId = 'rId' + (sheet.wsRels.length + 1)
         sheet.wsRels.push({
           id: relId,
-          target: '../comments' + (i+1) + '.xml',
+          target: '../comments' + (i + 1) + '.xml',
           type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments'
         })
 
-        zip.file('xl/drawings/vmlDrawing' + (i+1) + '.vml',  new WorksheetCommentsDrawings(sheet.notes).toxml())
+        zip.file('xl/drawings/vmlDrawing' + (i + 1) + '.vml', new WorksheetCommentsDrawings(sheet.notes).toxml())
 
 
       # <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="../comments2.xml"/>
@@ -1571,7 +1591,11 @@ class Workbook
 
         # - build xl/drawings/drawing(1-N).xml
         drawingFilename = wbMediaCounter + '.xml'
-        sheet.wsRels.push({id: relId, target: '../drawings/drawing' + drawingFilename, type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'})
+        sheet.wsRels.push({
+          id: relId,
+          target: '../drawings/drawing' + drawingFilename,
+          type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'
+        })
         zip.file('xl/drawings/drawing' + drawingFilename, image.toDrawingXml(relId, image))
 
         # - build xl/drawings/_rels/drawing(1-N).xml.rels
@@ -1583,7 +1607,7 @@ class Workbook
       zip.file('xl/worksheets/_rels/sheet' + (i + 1) + '.xml.rels', new XlWorksheetRels(sheet.wsRels).toxml())
 
       if (sheet.notes)
-        zip.file('xl/comments' + (i+1) + '.xml', new WorksheetComments(sheet.notes).toxml())
+        zip.file('xl/comments' + (i + 1) + '.xml', new WorksheetComments(sheet.notes).toxml())
 
       # - build xl/worksheets/sheet(1-N).xml
       zip.file('xl/worksheets/sheet' + (i + 1) + '.xml', @sheets[i].toxml())
