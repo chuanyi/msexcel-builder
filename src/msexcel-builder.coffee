@@ -576,7 +576,7 @@ class WorksheetCommentsDrawings
         padding = 5;
 
         num_rows = 5
-        num_cols = 4
+        num_cols = 5
         if Array.isArray(note)
           num_lines = note.length + 1
 
@@ -1054,12 +1054,12 @@ class Sheet
     if @_rowBreaks && @_rowBreaks.length
       cb = ws.ele('rowBreaks', {count: @_rowBreaks.length, manualBreakCount: @_rowBreaks.length})
       for i in @_rowBreaks
-        cb.ele('brk', {id: i, man: '1'})
+        cb.ele('brk', {id: i, man: '1', max: "1048575"})
 
     if @_colBreaks && @_colBreaks.length
       cb = ws.ele('colBreaks', {count: @_colBreaks.length, manualBreakCount: @_colBreaks.length})
       for i in @_colBreaks
-        cb.ele('brk', {id: i, man: '1'})
+        cb.ele('brk', {id: i, man: '1', max: "1048575"})
 
     for wsRel in @wsRels
       if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing')
