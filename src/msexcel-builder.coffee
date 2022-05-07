@@ -765,6 +765,7 @@ class Sheet
     @_pageMargins = {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
     @images = []
 
+
 # validates exclusivity between filling base64, filename, buffer properties.
 # validates extension is among supported types.
 # concurrency this is a critical path add semaphor, only one image can be added at the time.
@@ -826,33 +827,36 @@ class Sheet
   set: (col, row, str) ->
     if (arguments.length == 1 && col && typeof col == 'object')
       cells = col
-      for c,col of cells
-        for r,cell of col
-          this.set(c, r, cell)
-
-
-    else if str instanceof Date
-      @set col, row, JSDateToExcel str
-      # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
-      @fill col, row,
-        type: "solid",
-        fgColor: "FFFFFF"
-      @numberFormat col, row, 'd-mmm'
-    else if typeof str == 'object' && !Array.isArray(str)
-      for key of str
-        if typeof @[key] == 'function'
-          @[key] col, row, str[key]
-        else console.error('Ignoring ', key, col, row, str[key])
-    else if  typeof str == 'string'
-      if str != null and str != ''
-        @data[row][col].v = @book.ss.str2id('' + str)
-      return @data[row][col].dataType = 'string'
-    else if typeof str == 'number'
-      @data[row][col].v = str
-      return @data[row][col].dataType = 'number'
+      for r,row of cells
+        for c,cell of row
+          if (cell != null && cell != undefined)
+            this.set(+c+1, +r+1, cell)
+      return this
     else
-      @data[row][col].v = str
-    return
+      if (!@data[row] || !@data[col])
+        return this
+      if str instanceof Date
+        @set col, row, JSDateToExcel str
+        # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
+        @fill col, row,
+          type: "solid",
+          fgColor: "FFFFFF"
+        @numberFormat col, row, 'd-mmm'
+      else if typeof str == 'object' && !Array.isArray(str)
+        for key of str
+          if typeof @[key] == 'function'
+            @[key] col, row, str[key]
+          else console.error('Ignoring ', key, col, row, str[key])
+      else if  typeof str == 'string'
+        if str != null and str != ''
+          @data[row][col].v = @book.ss.str2id('' + str)
+        return @data[row][col].dataType = 'string'
+      else if typeof str == 'number'
+        @data[row][col].v = str
+        return @data[row][col].dataType = 'number'
+      else
+        @data[row][col].v = str
+    return this
 
   formula: (col, row, str) ->
     if (typeof str == 'string')
@@ -864,7 +868,6 @@ class Sheet
 
   note: (col, row, note) ->
     if (note && ((typeof note == 'string') || ((typeof note == 'object') && (note.length || note.text)) ))
-      console.log("note",col, row, note)
       @notes = @notes || {}
       @notes[col] = @notes[col] || {}
       @notes[col][row] = note
@@ -1469,6 +1472,11 @@ class Image
 
 class Workbook
   constructor: (@fpath, @fname) ->
+    if (typeof @fpath == 'object')
+      args = @fpath
+      @fname = args.name
+      @fpath = args.path
+
     @id = '' + parseInt(Math.random() * 9999999)
     # create temp folder & copy template data
     # init
@@ -1486,7 +1494,18 @@ class Workbook
 # @dw = new XlDrawing(@)
 # @dwre = new XlDrawingRels(@)
 
+  set: (obj) ->
+    if (obj && typeof obj == 'object')
+      for key, val of obj
+        if (typeof this[key] == 'function')
+          this[key](val)
+    return this;
+
   createSheet: (name, cols, rows) ->
+    if (name && typeof name == 'object')
+      args = name
+      return @createSheet(args.name, args.cols, args.rows).set(args.set)
+
     sheet = new Sheet(@, name, cols, rows)
     @sheets.push sheet
     return sheet
@@ -1535,6 +1554,15 @@ class Workbook
 
 # takes a callback function(err, zip) and returns a JSZip object on success
   generate: (cb) =>
+    self = this
+    if (!cb)
+      return new Promise((resolve,reject) ->
+        self.generate((err, zip) ->
+          if (err)
+            return reject(err)
+          return resolve(zip)
+        )
+      )
     zip = new JSZip()
 
     for key of baseXl
@@ -1627,18 +1655,25 @@ class Workbook
 # delete temp folder
     console.error "workbook.cancel() is deprecated"
 
+excelbuilder =
+  createWorkbook: (fpath, fname)->
+    return new Workbook(fpath, fname)
+
+  set: (obj) ->
+    if (obj && (typeof obj == 'object'))
+      for val, key of obj
+        if (typeof this[key] == 'function')
+          this[key](val)
+    return this
+
 JSDateToExcel = (dt) ->
   dt.valueOf() / 86400000 + 25569
 
 if (module? && module.exports?)
-  module.exports =
-    createWorkbook: (fpath, fname)->
-      return new Workbook(fpath, fname)
+  module.exports =excelbuilder
 
 if (window?)
-  window.excelbuilder =
-    createWorkbook: (fpath, fname)->
-      return new Workbook(fpath, fname)
+  window.excelbuilder = excelbuilder
 
 # Base content formerly stored in /lib/tmpl but placed in code so as to avoid dependence on file system
 baseXl =

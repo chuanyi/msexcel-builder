@@ -74,7 +74,7 @@ Further you can optionally compress the saved file:
    workbook.save("/tmp/workbook.xlsx", {compressed: true}, function(err) {
       if (err) throw err;
       console.log("open \"" + path + "\"");
-   });w
+   });
 ```
 
 ## Use in browser
@@ -184,6 +184,44 @@ workbook.save(function(err){
 ### Workbook.cancel()
 
 Cancel to make current workbook,drop all data.
+
+### Workbook.set(obj)
+
+Represent and create an entire workbook via JSON data 
+
+```js
+    var three = {
+      set: 3, font: {
+        name: 'Verdana',
+        sz: 32,
+        color: "FF0022FF",
+        bold: true,
+        iter: true,
+        underline: true
+      },
+      align: 'center',
+      fill: {
+        type: 'solid',
+        fgColor: 'FFFF2200'
+      }
+    }
+
+    var pojo = {
+      "createSheet": {
+        name: "sheet1",
+        cols: 10,
+        rows: 10,
+        set: [
+          ["A", "B", "C", "D", "E"],
+          [1, 2, three, 4, 5],
+          [6, 7, 8, 9, 10],
+          [11, 12, 13, 14, 15],
+        ]
+      },
+    }
+    
+    var workbook = excelbuilder.createWorkbook().set(pojo)
+```
 
 ### Sheet.set(col, row, val)
 
@@ -578,6 +616,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v0.4.4
+* Add `workbook.set(data)` to generate an entire workbook as JSON data 
 
 v0.4.3
 * Allow notes

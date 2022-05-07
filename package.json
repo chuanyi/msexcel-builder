@@ -6,7 +6,7 @@
     "xlsx",
     "excel"
   ],
-  "version": "0.4.4",
+  "version": "0.4.5",
   "repository": {
     "type": "git",
     "url": "git://github.com/protobi/msexcel-builder.git"
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "async": "~0.2.6",
-    "jszip": "^3.1.2",
+    "jszip": "^3.9.1",
     "xmlbuilder": ">=0.3.8"
   },
   "devDependencies": {

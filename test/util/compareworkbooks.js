@@ -3,7 +3,16 @@ var fs = require('fs')
 var async = require('async');
 
 
-module.exports = function (path1, path2, callback) {
+compare = function (path1, path2, callback) {
+
+  if (!callback) {
+    return new Promise(function(resolve, reject) {
+      compare(path1, path2, function(err, result) {
+        if (err) return reject(err)
+        return resolve(result)
+      })
+    })
+  }
   new JSZip.loadAsync(fs.readFileSync(path1)).then(function (zip1) {
     new JSZip.loadAsync(fs.readFileSync(path2)).then(function (zip2) {
 
@@ -45,3 +54,5 @@ module.exports = function (path1, path2, callback) {
     })
   })
 }
+
+module.exports = compare

@@ -14,7 +14,7 @@ const excelbuilder = requireUncached('..');
 describe('It sets cells ', function () {
 
 
-  it('Simple example #1', function (done) {
+  it('It sets cells', function (done) {
     this.timeout(20000)
     var workbook = excelbuilder.createWorkbook()
     var OUTFILE = './test/out/set.xlsx';
