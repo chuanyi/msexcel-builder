@@ -823,6 +823,11 @@ class Sheet
       return image && image.imageId
   ###
 
+  cells: (rows) ->
+    for row, r in rows
+      for cell, c in row
+        if (cell != null && cell != undefined)
+          this.set(+c+1, +r+1, cell)
 
   set: (col, row, str) ->
     if (arguments.length == 1 && col && typeof col == 'object')
@@ -1510,6 +1515,15 @@ class Workbook
     @sheets.push sheet
     return sheet
 
+  worksheets: (arr) ->
+    for spec, idx in arr
+      nrows=spec.cells.length
+      ncols=0
+      for row, rowIdx in spec.cells
+        ncols = Math.max(ncols, row.length)
+      sheet = @createSheet(spec.name, ncols, nrows)
+      sheet.cells(spec.cells)
+
   _addMediaFromImage: (image) ->
 ## converts image into proper media data structure
     @medias.push({image: image})
@@ -1540,6 +1554,15 @@ class Workbook
       cb = opts
       opts = {}
 
+    self = this
+    if (!cb)
+      return new Promise((resolve,reject) ->
+        self.save( (err, zip) ->
+            if (err)
+              return reject(err)
+            return resolve(zip)
+        )
+      )
     @generate (err, zip) ->
       buffer = undefined
       args = {type: 'nodebuffer'}
@@ -1557,7 +1580,7 @@ class Workbook
     self = this
     if (!cb)
       return new Promise((resolve,reject) ->
-        self.generate((err, zip) ->
+        self.generate ((err, zip) ->
           if (err)
             return reject(err)
           return resolve(zip)

@@ -36,26 +36,41 @@ describe('It sets cells ', function () {
       }
     }
 
+
     var pojo = {
-      "createSheet": {
-        name: "sheet1",
-        cols: 10,
-        rows: 10,
-        set: [
-          ["A", "B", "C", "D", "E"],
-          [1, 2, three, 4, 5],
-          [6, 7, 8, 9, 10],
-          [11, 12, 13, 14, 15],
-        ]
-      },
+      "worksheets": [
+        {
+          "name": "sheet1",
+          "cells": [
+            ["A", "B", "C", "D", "E"],
+            [1, 2, three, 4, 5],
+            [6, 7, 8, 9, 10],
+            [11, 12, 13, 14, 15],
+          ]
+        },
+        {
+          "name": "sheet2",
+          "cells": [
+            ["A", "B", "C", "D", "E"],
+            [1, 2, three, 4, 5],
+            [6, 7, 8, 9, 10],
+            [11, 12, 13, 14, 15],
+          ]
+        }
+      ]
     }
-    var workbook = excelbuilder.createWorkbook().set(pojo)
+
+
+    var workbook = excelbuilder.createWorkbook()
+    workbook.set(pojo)
     var zip = await workbook.generate()
     var buffer = await zip.generateAsync({type: "nodebuffer"})
     fs.writeFileSync(OUTFILE, buffer)
+    console.log("open \"" + OUTFILE + "\"")
     var result = await compareWorkbooks(TESTFILE, OUTFILE)
     if (!result) throw new Error(["Results don't match #1", TESTFILE, OUTFILE].join(":"))
     else return true
   })
-});
+})
+;
 

@@ -207,20 +207,30 @@ Represent and create an entire workbook via JSON data
     }
 
     var pojo = {
-      "createSheet": {
-        name: "sheet1",
-        cols: 10,
-        rows: 10,
-        set: [
-          ["A", "B", "C", "D", "E"],
-          [1, 2, three, 4, 5],
-          [6, 7, 8, 9, 10],
-          [11, 12, 13, 14, 15],
-        ]
-      },
+      "worksheets": [
+        {
+          "name": "sheet1",
+          "cells": [
+            ["A", "B", "C", "D", "E"],
+            [1, 2, three, 4, 5],
+            [6, 7, 8, 9, 10],
+            [11, 12, 13, 14, 15],
+          ]
+        },
+        {
+          "name": "sheet2",
+          "cells": [
+            ["A", "B", "C", "D", "E"],
+            [1, 2, 3, 4, 5],
+            [6, 7, 8, 9, 10],
+            [11, 12, 13, 14, 15],
+          ]
+        }
+      ]
     }
-    
-    var workbook = excelbuilder.createWorkbook().set(pojo)
+
+
+  var workbook = excelbuilder.createWorkbook().set(pojo)
 ```
 
 ### Sheet.set(col, row, val)
@@ -617,6 +627,8 @@ in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
 
+v0.4.6 
+* Async functions return a Promise if no callback is specified, so they can work with async/await syntax
 v0.4.4
 * Add `workbook.set(data)` to generate an entire workbook as JSON data 
 
