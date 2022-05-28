@@ -21,7 +21,8 @@ describe('It sets cells ', function () {
     var TESTFILE = './test/files/workbook.xlsx'
 
     var three = {
-      set: 3, font: {
+      set: 3,
+      font: {
         name: 'Verdana',
         sz: 32,
         color: "FF0022FF",
@@ -33,7 +34,9 @@ describe('It sets cells ', function () {
       fill: {
         type: 'solid',
         fgColor: 'FFFF2200'
-      }
+      },
+      width: 100,
+      row:100
     }
 
 
@@ -43,10 +46,17 @@ describe('It sets cells ', function () {
           "name": "sheet1",
           "cells": [
             ["A", "B", "C", "D", "E"],
+              [],
             [1, 2, three, 4, 5],
             [6, 7, 8, 9, 10],
             [11, 12, 13, 14, 15],
-          ]
+
+          ],
+          options: {
+            "sheetViews": {
+              "showGridLines": "0"
+            }
+          }
         },
         {
           "name": "sheet2",

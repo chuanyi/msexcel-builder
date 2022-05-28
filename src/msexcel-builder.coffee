@@ -765,7 +765,6 @@ class Sheet
     @_pageMargins = {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
     @images = []
 
-
 # validates exclusivity between filling base64, filename, buffer properties.
 # validates extension is among supported types.
 # concurrency this is a critical path add semaphor, only one image can be added at the time.
@@ -838,9 +837,9 @@ class Sheet
             this.set(+c+1, +r+1, cell)
       return this
     else
-      if (!@data[row] || !@data[col])
+      if (!@data[row] || !@data[row][col])
         return this
-      if str instanceof Date
+      else if str instanceof Date
         @set col, row, JSDateToExcel str
         # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
         @fill col, row,
