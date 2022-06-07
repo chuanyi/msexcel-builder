@@ -29,9 +29,6 @@ describe('It generates a simple workbook', function () {
 
         fmt = (count++ < 206) ? fmt : null
 
-        //console.log(count, fmt)
-
-
         sheet1.set(1 + i, 1 + j, {
           set: Math.random(),
           numberFormat: fmt

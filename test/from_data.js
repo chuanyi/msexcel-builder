@@ -43,14 +43,11 @@ describe('It sets cells ', function () {
 
         if (cell && typeof cell == 'object') {
           if (cell.set &&! Number.isNaN(cell.set)) {
-            console.log("sheet.set object ", colIdx+1, rowIdx+1, cell.set)
-
             sheet.set(colIdx + 1, rowIdx + 1, cell.set)
           }
         }
         else if (cell && cell !== undefined && cell !== '' && !Number.isNaN(cell)) {
           sheet.set(colIdx + 1, rowIdx + 1, ["B",colIdx+1,rowIdx+1].join(":"))
-          console.log("sheet.set value ", colIdx+1, rowIdx+1, cell)
         }
       })
     })

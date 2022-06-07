@@ -857,7 +857,8 @@ class Sheet
       else if  typeof str == 'string'
         if str != null and str != ''
           @data[row][col].v = @book.ss.str2id('' + str)
-        return @data[row][col].dataType = 'string'
+          return @data[row][col].dataType = 'string'
+          
       else if typeof str == 'number'
         @data[row][col].v = str
         return @data[row][col].dataType = 'number'

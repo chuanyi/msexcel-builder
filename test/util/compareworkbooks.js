@@ -22,7 +22,6 @@ compare = function (path1, path2, callback) {
           zip1.file(key).async("string").then(function (text1) {
 
             zip2.file(key).async("string").then(function (text2) {
-              //console.log('match?',key, text1==text2)
               return cb(null, text1 == text2);
             }).catch(function (err) {
               return cb(err);
