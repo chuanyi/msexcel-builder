@@ -837,7 +837,7 @@ class Sheet
             this.set(+c+1, +r+1, cell)
       return this
     else
-      if (!@data[row] || !@data[col])
+      if (!@data[row] || !@data[row][col])
         return this
       if str instanceof Date
         @set col, row, JSDateToExcel str
@@ -858,7 +858,7 @@ class Sheet
         if str != null and str != ''
           @data[row][col].v = @book.ss.str2id('' + str)
           return @data[row][col].dataType = 'string'
-          
+
       else if typeof str == 'number'
         @data[row][col].v = str
         return @data[row][col].dataType = 'number'
