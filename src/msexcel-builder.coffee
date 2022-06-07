@@ -765,11 +765,11 @@ class Sheet
     @_pageMargins = {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
     @images = []
 
-# validates exclusivity between filling base64, filename, buffer properties.
-# validates extension is among supported types.
-# concurrency this is a critical path add semaphor, only one image can be added at the time.
-# there's a risk of adding image in parallel and returing diferent id between push and returning.
-# exceljs also contains same risk, despite of collecting id before.
+  # validates exclusivity between filling base64, filename, buffer properties.
+  # validates extension is among supported types.
+  # concurrency this is a critical path add semaphor, only one image can be added at the time.
+  # there's a risk of adding image in parallel and returing diferent id between push and returning.
+  # exceljs also contains same risk, despite of collecting id before.
   addImage: (image) ->
     if !image || !image.range || !image.base64 || !image.extension
       throw Error('please verify your image format')
@@ -837,9 +837,9 @@ class Sheet
             this.set(+c+1, +r+1, cell)
       return this
     else
-      if (!@data[row] || !@data[row][col])
+      if (!@data[row] || !@data[col])
         return this
-      else if str instanceof Date
+      if str instanceof Date
         @set col, row, JSDateToExcel str
         # for some reason the number format doesn't apply if the fill is not also set. BUG? Mystery?
         @fill col, row,
@@ -847,9 +847,12 @@ class Sheet
           fgColor: "FFFFFF"
         @numberFormat col, row, 'd-mmm'
       else if typeof str == 'object' && !Array.isArray(str)
-        for key of str
+        for key, arg of str
           if typeof @[key] == 'function'
-            @[key] col, row, str[key]
+            if key == 'width'
+              @[key] col, str[key]
+            else
+              @[key] col, row, str[key]
           else console.error('Ignoring ', key, col, row, str[key])
       else if  typeof str == 'string'
         if str != null and str != ''
@@ -1521,7 +1524,9 @@ class Workbook
       for row, rowIdx in spec.cells
         ncols = Math.max(ncols, row.length)
       sheet = @createSheet(spec.name, ncols, nrows)
-      sheet.cells(spec.cells)
+      for key,val of spec
+        if (typeof sheet[key] == 'function')
+          sheet[key] val
 
   _addMediaFromImage: (image) ->
 ## converts image into proper media data structure

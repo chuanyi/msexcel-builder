@@ -36,7 +36,7 @@ describe('It sets cells ', function () {
         fgColor: 'FFFF2200'
       },
       width: 100,
-      row:100
+      row: 100
     }
 
 
@@ -44,22 +44,23 @@ describe('It sets cells ', function () {
       "worksheets": [
         {
           "name": "sheet1",
+          "sheetViews": {
+            "showGridLines": "0"
+          },
           "cells": [
             ["A", "B", "C", "D", "E"],
-              [],
+            [],
             [1, 2, three, 4, 5],
             [6, 7, 8, 9, 10],
             [11, 12, 13, 14, 15],
 
-          ],
-          options: {
-            "sheetViews": {
-              "showGridLines": "0"
-            }
-          }
+          ]
         },
         {
           "name": "sheet2",
+          "sheetViews": {
+            "showGridLines": "0"
+          },
           "cells": [
             ["A", "B", "C", "D", "E"],
             [1, 2, three, 4, 5],
