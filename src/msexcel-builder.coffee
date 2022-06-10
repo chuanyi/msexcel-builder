@@ -43,8 +43,6 @@ ImageType =
   PNG: "image/png"
 # JPEG : 401
 
-Function::property = (prop, desc) ->
-  Object.defineProperty @prototype, prop, desc
 
 addressRegex = /^[A-Z]+\d+$/
 # =========================================================================
@@ -682,7 +680,8 @@ class Anchor
       @nativeRowOff = 0
     return
 
-  @property 'col', {
+
+  Object.defineProperty( Anchor.prototype, 'col', {
     get: -> @nativeCol + Math.min(@colWidth - 1, @nativeColOff) / @colWidth
     set: (v) ->
       @nativeCol = Math.floor(v)
@@ -690,8 +689,9 @@ class Anchor
       return
     enumerable: true
     configurable: true
-  }
-  @property 'row', {
+  })
+
+  Object.defineProperty( Anchor.prototype, 'row', {
     get: ->
       @nativeRow + Math.min(@rowHeight - 1, @nativeRowOff) / @rowHeight
     set: (v) ->
@@ -700,22 +700,25 @@ class Anchor
       return
     enumerable: true
     configurable: true
-  }
-  @property 'colWidth', {
+  })
+
+  Object.defineProperty( Anchor.prototype, 'colWidth', {
     get: ->
       if @worksheet and @worksheet.width(@nativeCol, @nativeCol + 1) then
 #  and @worksheet.getColumn(@nativeCol + 1).isCustomWidth then
 # Math.floor(@worksheet.getColumn(@nativeCol + 1).width * 10000) else 640000
     enumerable: true
     configurable: true
-  }
-  @property 'rowHeight', {
+  })
+
+  Object.defineProperty( Anchor.prototype, 'rowHeight', {
     get: ->
       if @worksheet and @worksheet.getRow(@nativeRow + 1) and @worksheet.getRow(@nativeRow + 1).height then Math.floor(@worksheet.getRow(@nativeRow + 1).height * 10000) else 180000
     enumerable: true
     configurable: true
-  }
-  @property 'model', {
+  })
+
+  Object.defineProperty( Anchor.prototype, 'model', {
     get: -> {
       nativeCol: @nativeCol
       nativeColOff: @nativeColOff
@@ -730,7 +733,7 @@ class Anchor
       return
     enumerable: true
     configurable: true
-  }
+  })
 
   asInstance = (model) ->
     if model instanceof Anchor or model == null then model else new Anchor(model)
