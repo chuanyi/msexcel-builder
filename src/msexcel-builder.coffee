@@ -870,6 +870,13 @@ class Sheet
         @data[row][col].v = str
     return this
 
+  text: (col, row, str) ->
+    if  typeof str == 'string'
+      if str != null and str != '' and str != undefined
+        str = str.replace(/[\u0000-\u001F\u007F-\u009F\u200b]/g, "")
+        @data[row][col].v = @book.ss.str2id('' + str)
+        return @data[row][col].dataType = 'string'
+
   formula: (col, row, str) ->
     if (typeof str == 'string')
       @formulas = @formulas || []
