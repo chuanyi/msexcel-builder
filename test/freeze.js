@@ -12,12 +12,8 @@ var OUTFILE = './test/out/freeze.xlsx';
 var TESTFILE = './test/files/freeze.xlsx';
 var compareWorkbooks = require('./util/compareworkbooks.js')
 
-
 describe('It applies autofilter', function () {
-
-
   it('generates a ZIP file we can save', function (done) {
-
     var workbook = excelbuilder.createWorkbook()
 
     // Create a new worksheet with 10 columns and 12 rows
