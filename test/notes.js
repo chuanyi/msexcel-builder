@@ -17,9 +17,9 @@ describe('Notes', function () {
     var PATH = './test/out';
     var FILENAME = 'notes.xlsx';
 
-    // for local testing
-    var PATH = './lab/generated'
-    var FILENAME = 'generated.xlsx';
+    // // for local testing
+    // var PATH = './lab/generated'
+    // var FILENAME = 'generated.xlsx';
 
     var workbook = excelbuilder.createWorkbook();
     var sheet1 = workbook.createSheet('sheet1', 5, 2)
