@@ -1,4 +1,4 @@
-# msexcel-builder
+# protobi-msexcel-builder
 
 A simple and fast library to create MS Office Excel(>2007) xlsx files(Compatible with the OpenOffice document format). 
 
@@ -17,11 +17,11 @@ Features:
 Install it in node.js:
 
 ```
-npm install msexcel-builder
+npm install protobi-msexcel-builder
 ```
 
 ```javascript
-var excelbuilder = require('msexcel-builder');
+var excelbuilder = require('protobi-msexcel-builder');
 ```
 
 
@@ -626,6 +626,9 @@ break tests for innocent reasons (e.g. by writing additional XML to the workbook
 in which case, visually inspect the output file and update the reference file.
 
 ## Release notes
+
+v1.0.1
+Publish to NPM
 
 v0.4.6 
 * Async functions return a Promise if no callback is specified, so they can work with async/await syntax

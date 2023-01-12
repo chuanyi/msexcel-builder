@@ -1,12 +1,12 @@
 {
   "author": "Charlie Zheng <chuanyi.zheng@gmail.com>",
-  "name": "msexcel-builder",
+  "name": "protobi-msexcel-builder",
   "description": "A tiny library to create Microsoft Office Excel(2007) files under Nodejs.",
   "tags": [
     "xlsx",
     "excel"
   ],
-  "version": "0.4.12",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/protobi/msexcel-builder.git"
@@ -33,5 +33,24 @@
   "browser": {
     "fs": false,
     "path": false
-  }
+  },
+  "homepage": "https://github.com/protobi/msexcel-builder#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "Javascript",
+    "API",
+    "to",
+    "write",
+    "Excel",
+    ".xlsx",
+    "files",
+    "in",
+    "Node",
+    "and",
+    "browser"
+  ],
+  "license": "MIT"
 }
