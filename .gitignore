@@ -169,3 +169,12 @@ node_modules
 
 #WebStorm
 .idea
+
+#Experimental area
+lab/
+
+
+#############
+# Test output
+#############
+test/out/*.xlsx
