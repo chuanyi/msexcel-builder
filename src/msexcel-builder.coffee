@@ -892,10 +892,19 @@ class Sheet
       @notes[col][row] = note
 
   merge: (from_cell, to_cell) ->
-    @merges.push({from: from_cell, to: to_cell})
+    if (Array.isArray(from_cell))
+      for entry in from_cell
+        @merges.push(entry)
+    else
+      @merges.push({from: from_cell, to: to_cell})
 
   width: (col, wd) ->
-    @col_wd.push({c: col, cw: wd})
+    if (Array.isArray(col))
+      for width, idx in col
+        if (idx>0 && width)
+          @width(idx, width )
+    else
+      @col_wd.push({c: col, cw: wd})
 
   getColWidth: (col) ->
     for _col in @col_wd
@@ -1257,7 +1266,8 @@ class Style
           return parseInt key;
       # if it's not in numberFormats, we parse the string and add it the end of numberFormats
       if !numfmt
-        throw "Invalid format specification"
+        console.error ("Invalid format specification: " + numfmt)
+        return 0
       #      numfmt = numfmt
       #        .replace(/&/g, '&amp')
       #        .replace(/</g, '&lt;')

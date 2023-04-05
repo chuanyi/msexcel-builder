@@ -57,6 +57,13 @@ describe('It generates a simple workbook', function () {
       set: 0.314159
     });
 
+    sheet1.set(1, 6, {
+      fill: {type: "solid", fgColor: "00FFFFFF"},
+      font: {name: "Calibri", sz: 12},
+      numberFormat: '"▲"\\ General',
+      set: 0.314159
+    });
+
     workbook.save(OUTFILE, function (err) {
       if (err) throw err;
       else {
