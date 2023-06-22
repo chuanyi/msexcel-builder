@@ -768,11 +768,11 @@ class Sheet
     @_pageMargins = {left: '0.7', right: '0.7', top: '0.75', bottom: '0.75', header: '0.3', footer: '0.3'}
     @images = []
 
-  # validates exclusivity between filling base64, filename, buffer properties.
-  # validates extension is among supported types.
-  # concurrency this is a critical path add semaphor, only one image can be added at the time.
-  # there's a risk of adding image in parallel and returing diferent id between push and returning.
-  # exceljs also contains same risk, despite of collecting id before.
+# validates exclusivity between filling base64, filename, buffer properties.
+# validates extension is among supported types.
+# concurrency this is a critical path add semaphor, only one image can be added at the time.
+# there's a risk of adding image in parallel and returing diferent id between push and returning.
+# exceljs also contains same risk, despite of collecting id before.
   addImage: (image) ->
     if !image || !image.range || !image.base64 || !image.extension
       throw Error('please verify your image format')
@@ -1095,6 +1095,8 @@ class Sheet
     for wsRel in @wsRels
       if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing')
         ws.ele('legacyDrawing', {'r:id': wsRel.id})
+      else if (true || wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing')
+        ws.ele('drawing', {'r:id': wsRel.id})
 
 
     ws.end({pretty: false})
@@ -1150,36 +1152,36 @@ class Style
     @mbders = [] # border style
     @mstyle = [] # cell style<ref-font,ref-fill,ref-border,align>
     @numberFormats = {
-        0: 'General'
-        1: '0'
-        2: '0.00'
-        3: '#,##0'
-        4: '#,##0.00'
-        9: '0%'
-        10: '0.00%'
-        11: '0.00E+00'
-        12: '# ?/?'
-        13: '# ??/??'
-        14: 'm/d/yy'
-        15: 'd-mmm-yy'
-        16: 'd-mmm'
-        17: 'mmm-yy'
-        18: 'h:mm AM/PM'
-        19: 'h:mm:ss AM/PM'
-        20: 'h:mm'
-        21: 'h:mm:ss'
-        22: 'm/d/yy h:mm'
-        37: '#,##0 ;(#,##0)'
-        38: '#,##0 ;[Red](#,##0)'
-        39: '#,##0.00;(#,##0.00)'
-        40: '#,##0.00;[Red](#,##0.00)'
-        45: 'mm:ss'
-        46: '[h]:mm:ss'
-        47: 'mmss.0'
-        48: '##0.0E+0'
-        49: '@'
-        56: '"上午/下午 "hh"時"mm"分"ss"秒 "'
-      }
+      0: 'General'
+      1: '0'
+      2: '0.00'
+      3: '#,##0'
+      4: '#,##0.00'
+      9: '0%'
+      10: '0.00%'
+      11: '0.00E+00'
+      12: '# ?/?'
+      13: '# ??/??'
+      14: 'm/d/yy'
+      15: 'd-mmm-yy'
+      16: 'd-mmm'
+      17: 'mmm-yy'
+      18: 'h:mm AM/PM'
+      19: 'h:mm:ss AM/PM'
+      20: 'h:mm'
+      21: 'h:mm:ss'
+      22: 'm/d/yy h:mm'
+      37: '#,##0 ;(#,##0)'
+      38: '#,##0 ;[Red](#,##0)'
+      39: '#,##0.00;(#,##0.00)'
+      40: '#,##0.00;[Red](#,##0.00)'
+      45: 'mm:ss'
+      46: '[h]:mm:ss'
+      47: 'mmss.0'
+      48: '##0.0E+0'
+      49: '@'
+      56: '"上午/下午 "hh"時"mm"分"ss"秒 "'
+    }
 
 
     @numFmtNextId = 164
@@ -1585,9 +1587,9 @@ class Workbook
     if (!cb)
       return new Promise((resolve,reject) ->
         self.save( (err, zip) ->
-            if (err)
-              return reject(err)
-            return resolve(zip)
+          if (err)
+            return reject(err)
+          return resolve(zip)
         )
       )
     @generate (err, zip) ->
