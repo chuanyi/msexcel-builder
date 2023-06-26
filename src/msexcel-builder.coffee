@@ -1095,7 +1095,7 @@ class Sheet
     for wsRel in @wsRels
       if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing')
         ws.ele('legacyDrawing', {'r:id': wsRel.id})
-      else if (true || wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing')
+      else if (wsRel.type == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing')
         ws.ele('drawing', {'r:id': wsRel.id})
 
 
